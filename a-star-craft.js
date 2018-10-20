@@ -29,6 +29,79 @@ const mod = (a, n) => {
   return a - n * Math.floor(a/n);
 };
 
+
+const isArrow = (cell) => {
+  let arrow = false;
+  switch (cell) {
+    case 'U':
+    case 'D':
+    case 'R':
+    case 'L':
+      arrow = true;
+    break;
+  }
+
+  return arrow;
+};
+
+const isDir = (cell) => {
+  let dir = false
+  switch (cell) {
+    case 'ne':
+    case 'n':
+    case 'nw':
+    case 'w':
+    case 'sw':
+    case 's':
+    case 'se':
+    case 'e':
+      dir = true;
+    break;
+  }
+
+  return dir;
+};
+
+const arrowToDir = (cell) => {
+  let dir = false;
+
+  switch (cell) {
+    case 'U':
+      dir = 'n';
+      break;
+    case 'D':
+      dir = 's';
+      break;
+    case 'R':
+      dir = 'e';
+      break;
+    case 'L':
+      dir = 'w';
+      break;
+  }
+
+  return dir;
+};
+
+const dirToArrow = (cell) => {
+  let arrow = false;
+  switch (cell) {
+    case 'n':
+      arrow = 'U';
+      break;
+    case 's':
+      arrow = 'D';
+      break;
+    case 'e':
+      arrow = 'R';
+      break;
+    case 'w':
+      arrow = 'L';
+      break;
+  }
+  return arrow;
+};
+
 const getCellCoordsInDir = (dir, x, y, lines) => {
   const northI = mod(y - 1, lines.length);
   const southI = mod(y + 1, lines.length);
@@ -461,7 +534,6 @@ robots.forEach(({x, y, direction}) => {
   printErr('x, y, direction', x, y, direction);
 
   if (!isCommandSafe(x, y, '.', direction)) {
-    let newDir;
     switch (direction) {
       case 'U':
         newDir = 'D';
@@ -479,41 +551,40 @@ robots.forEach(({x, y, direction}) => {
     addCommand(x, y, '.', newDir);
   }
 });
-let maxScore = 40;
-const follow = (direction, x, y, lines, score=0) => {
+let maxScore = 25;
+const follow = (cell, x, y, lines, lastDir, steps=[], score=0) => {
   printErrJSON('follow', {
-    direction,
+    cell,
+    lastDir,
     score,
     x,
     y,
   });
-  const neighbors = getNeighbors(x, y, direction, lines);
+  const neighbors = getNeighbors(x, y, cell, lines);
 
-  let nextCell = false;
-  switch (direction) {
-    case 'U':
-      nextCell = 'n';
-      break;
-    case 'D':
-      nextCell = 's';
-      break;
-    case 'R':
-      nextCell = 'e';
-      break;
-    case 'L':
-      nextCell = 'w';
-      break;
+  let nextCell = false
+  if (isArrow(cell)) {
+    nextCell = arrowToDir(cell);
+    lastDir = nextCell;
+  } else if (cell != '#') {
+    nextCell = lastDir;
+  } else {
+    printErr('thats a #, abort');
   }
-  printErrJSON('next cell getCellCoordsInDir', nextCell,
-      getCellCoordsInDir(nextCell, x, y, lines));
-  if (nextCell && score <= maxScore) {
-    let coords = getCellCoordsInDir(nextCell, x, y, lines);
 
-    return follow(neighbors[nextCell], coords.x, coords.y, lines, ++score);
+  // printErrJSON('next cell getCellCoordsInDir', nextCell,
+      // getCellCoordsInDir(nextCell, x, y, lines));
+  const stepSignature = `${x} ${y} ${nextCell}`;
+  printErr('stepSignature', stepSignature);
+  if (nextCell && !steps.includes(stepSignature) && score <= maxScore) {
+    let coords = getCellCoordsInDir(nextCell, x, y, lines);
+    steps.push(`${x} ${y} ${nextCell}`);
+    return follow(neighbors[nextCell], coords.x, coords.y, lines, lastDir, steps, ++score);
   }
 
   return score;
 };
+
 
 robots.forEach(({x, y, direction}, i) => {
   printErr('robot', i, ':');
@@ -524,7 +595,9 @@ robots.forEach(({x, y, direction}, i) => {
     printErr('dir', dir);
     const cell = neighbors[dir];
     const coords = getCellCoordsInDir(dir, x, y, lines);
-    scores[dir] = follow(cell, coords.x, coords.y, lines);
+    const tmpLines = JSON.parse(JSON.stringify(lines));
+    tmpLines[y][x] = dirToArrow(dir);
+    scores[dir] = follow(cell, coords.x, coords.y, tmpLines, dir);
   });
 
   printErrJSON('scores', scores);
@@ -532,21 +605,8 @@ robots.forEach(({x, y, direction}, i) => {
       .reduce((a, b) => scores[a] > scores[b] ? a : b);
 
   printErrJSON('highScoreDir', highScoreDir);
-  let command = false;
-  switch (highScoreDir) {
-    case 'n':
-      command = 'U';
-      break;
-    case 's':
-      command = 'D';
-      break;
-    case 'e':
-      command = 'R';
-      break;
-    case 'w':
-      command = 'L';
-      break;
-  }
+  let command = dirToArrow(highScoreDir);
+  printErrJSON('command', command);
   // ?? Ignore the pathfinding if the scores aren't a significant gain ??
   if (scores[highScoreDir] > 3) {
     addCommand(x, y, lines[y][x], command);
