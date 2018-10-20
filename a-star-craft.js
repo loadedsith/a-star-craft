@@ -188,13 +188,14 @@ const isCommandSafe = function(x, y, cell, command) {
   return safe;
 };
 
-const addCommand = (x, y, cell, command) => {
+const addCommand = (x, y, cell, command, lines) => {
   if (!commands[y]) {
     commands[y] = [];
   }
 
   if (isCommandSafe(x, y, cell, command)) {
     commands[y][x] = command;
+    lines[y][x] = command;
   }
 };
 
@@ -204,9 +205,33 @@ let y0 = 0;
 let length = 0;
 
 const actions = [
+  // {
+  //   action: (x, y, cell, lines) => {
+  //     addCommand(x, y, cell, 'D');
+  //   },
+  //   matcher: (x, y, cell, lines) => {
+  //     if (cell == '.') {
+  //       const {n, e, sw, w, s} = getNeighbors(x, y, cell, lines);
+  //       if (n == '#' && e == '#' && sw == '#') {
+  //         if (w == '.' && s == '.') {
+  //           return true;
+  //         }
+  //       }
+  //     }
+  //
+  //     return false;
+  //   },
+  //   name: `
+  //   #####
+  //   #PPP#
+  //   #PPP#
+  //   #PPP#
+  //   #####
+  //   `,
+  // },
   {
     action: (x, y, cell, lines) => {
-      addCommand(x, y, cell, 'R');
+      addCommand(x, y, cell, 'R', lines);
     },
     matcher: (x, y, cell, lines) => {
       if (cell == '.') {
@@ -227,7 +252,7 @@ const actions = [
   },
   {
     action: (x, y, cell, lines) => {
-      addCommand(x, y, cell, 'L');
+      addCommand(x, y, cell, 'L', lines);
     },
     matcher: (x, y, cell, lines) => {
       if (cell == '.') {
@@ -248,15 +273,19 @@ const actions = [
   },
   {
     action: (x, y, cell, lines) => {
-      addCommand(x, y, cell, 'R');
+      addCommand(x, y, cell, 'R', lines);
+      printErr('>.', x, y, cell, 'R')
     },
     matcher: (x, y, cell, lines) => {
-      if (cell == '.') {
+      if (cell == '.' || isArrow(cell)) {
         const {n, w, se, e, s} = getNeighbors(x, y, cell, lines);
 
         if (n == '#' && w == '#' && se == '#') {
           if (e == '.' && s == '.') {
             return true;
+          } else {
+            printErr('match x y', x, y);
+            printErr('e and s', e, s);
           }
         }
       }
@@ -271,7 +300,7 @@ const actions = [
   },
   {
     action: (x, y, cell, lines) => {
-      addCommand(x, y, cell, 'D');
+      addCommand(x, y, cell, 'D', lines);
     },
     matcher: (x, y, cell, lines) => {
       if (cell == '.') {
@@ -293,7 +322,7 @@ const actions = [
   },
   {
     action: (x, y, cell, lines) => {
-      addCommand(x, y, cell, 'L');
+      addCommand(x, y, cell, 'L', lines);
     },
     matcher: (x, y, cell, lines) => {
       if (cell == '.') {
@@ -316,10 +345,10 @@ const actions = [
   },
   {
     action: (x, y, cell, lines) => {
-      addCommand(x, y, cell, 'U');
+      addCommand(x, y, cell, 'U', lines);
     },
     matcher: (x, y, cell, lines) => {
-      if (cell == '.') {
+      if (cell == '.' || isArrow(cell)) {
         const {ne, w, s, n, e} = getNeighbors(x, y, cell, lines);
 
         if (ne == '#' && w == '#' && s == '#') {
@@ -340,8 +369,8 @@ const actions = [
 
   {
     action: (x, y, cell, lines) => {
-      addCommand(x, y, cell, 'D');
-      // addCommand(x, y + 1, cell, 'D');
+      addCommand(x, y, cell, 'D', lines);
+      // addCommand(x, y + 1, cell, 'D', lines);
     },
     matcher: (x, y, cell, lines) => {
       if (cell == '.') {
@@ -364,7 +393,7 @@ const actions = [
   },
   {
     action: (x, y, cell, lines) => {
-      addCommand(x, y, cell, 'U');
+      addCommand(x, y, cell, 'U', lines);
     },
     matcher: (x, y, cell, lines) => {
       if (cell == '.') {
@@ -387,7 +416,7 @@ const actions = [
   },
   {
     action: (x, y, cell, lines) => {
-      addCommand(x, y, cell, 'R');
+      addCommand(x, y, cell, 'R', lines);
     },
     matcher: (x, y, cell, lines) => {
       if (cell == '.') {
@@ -411,7 +440,7 @@ const actions = [
 
   {
     action: (x, y, cell, lines) => {
-      addCommand(x, y, cell, 'L');
+      addCommand(x, y, cell, 'L', lines);
     },
     matcher: (x, y, cell, lines) => {
       if (cell == '.') {
@@ -435,7 +464,7 @@ const actions = [
 
   {
     action: (x, y, cell, lines) => {
-      addCommand(x, y, cell, 'L');
+      addCommand(x, y, cell, 'L', lines);
     },
     matcher: (x, y, cell, lines) => {
       if (cell == '.') {
@@ -470,7 +499,7 @@ for (let i = 0; i < 10; i++) {
     y0 = i;
     length = line.match(/\./g).length;
   }
-  printErr('length', length);
+  // printErr('length', length);
 }
 
 printErr('x0', x0, 'y0', y0);
@@ -483,6 +512,9 @@ lines.forEach((line, y) => {
 lines.forEach((line, y) => {
   line.forEach((cell, x) => {
     actions.forEach((action) => {
+      if (x == 0 && y == 2) {
+        printErr('0,2', action.matcher(x, y, cell, lines))
+      }
       if (action.matcher(x, y, cell, lines)) {
         action.action(x, y, cell, lines, commands);
       }
@@ -531,8 +563,6 @@ for (let i = 0; i < robotCount; i++) {
 
 printErr('robots', JSON.stringify(robots));
 robots.forEach(({x, y, direction}) => {
-  printErr('x, y, direction', x, y, direction);
-
   if (!isCommandSafe(x, y, '.', direction)) {
     switch (direction) {
       case 'U':
@@ -548,18 +578,18 @@ robots.forEach(({x, y, direction}) => {
         newDir = 'R';
         break;
     }
-    addCommand(x, y, '.', newDir);
+    addCommand(x, y, '.', newDir, lines);
   }
 });
-let maxScore = 25;
+let maxScore = 40;
 const follow = (cell, x, y, lines, lastDir, steps=[], score=0) => {
-  printErrJSON('follow', {
-    cell,
-    lastDir,
-    score,
-    x,
-    y,
-  });
+  // printErrJSON('follow', {
+  //   cell,
+  //   lastDir,
+  //   score,
+  //   x,
+  //   y,
+  // });
   const neighbors = getNeighbors(x, y, cell, lines);
 
   let nextCell = false
@@ -569,13 +599,11 @@ const follow = (cell, x, y, lines, lastDir, steps=[], score=0) => {
   } else if (cell != '#') {
     nextCell = lastDir;
   } else {
-    printErr('thats a #, abort');
+    // printErr('thats a #, abort');
   }
 
-  // printErrJSON('next cell getCellCoordsInDir', nextCell,
-      // getCellCoordsInDir(nextCell, x, y, lines));
   const stepSignature = `${x} ${y} ${nextCell}`;
-  printErr('stepSignature', stepSignature);
+  printErr('step', `${x} ${y} ${nextCell} ${cell}`);
   if (nextCell && !steps.includes(stepSignature) && score <= maxScore) {
     let coords = getCellCoordsInDir(nextCell, x, y, lines);
     steps.push(`${x} ${y} ${nextCell}`);
@@ -586,7 +614,7 @@ const follow = (cell, x, y, lines, lastDir, steps=[], score=0) => {
 };
 
 
-robots.forEach(({x, y, direction}, i) => {
+[robots[4]].forEach(({x, y, direction}, i) => {
   printErr('robot', i, ':');
   const neighbors = getNeighbors(x, y, '.', lines);
   const scores = {};
@@ -609,7 +637,7 @@ robots.forEach(({x, y, direction}, i) => {
   printErrJSON('command', command);
   // ?? Ignore the pathfinding if the scores aren't a significant gain ??
   if (scores[highScoreDir] > 3) {
-    addCommand(x, y, lines[y][x], command);
+    addCommand(x, y, lines[y][x], command, lines);
   }
 });
 
