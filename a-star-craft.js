@@ -592,7 +592,7 @@ const follow = (cell, x, y, lines, lastDir, steps=[], score=0) => {
   // });
   const neighbors = getNeighbors(x, y, cell, lines);
 
-  let nextCell = false
+  let nextCell = false;
   if (isArrow(cell)) {
     nextCell = arrowToDir(cell);
     lastDir = nextCell;
@@ -614,7 +614,7 @@ const follow = (cell, x, y, lines, lastDir, steps=[], score=0) => {
 };
 
 
-[robots[4]].forEach(({x, y, direction}, i) => {
+robots.forEach(({x, y, direction}, i) => {
   printErr('robot', i, ':');
   const neighbors = getNeighbors(x, y, '.', lines);
   const scores = {};
