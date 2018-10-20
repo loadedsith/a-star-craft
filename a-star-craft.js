@@ -9,24 +9,25 @@
   ************
   *>        <*
   *>        <*
-  *>        <*
-  *>        <*
-  *>        <*
-  *>        <*
-  *>        <*
   ************
 
-  ************
-  *>         *
-  * \/       *
-  *  >       *
-  *   \/     *
-  *    >     *
-  *     \/   *
-  *      >   *
-  ************
+  ********
+  *\/ >  *
+  * \/ > *
+  *  \/ >*
+  ********
 */
 const lines = [];
+const commands = [];
+
+const addCommand = (x, y, command) => {
+  if (!commands[x]) {
+    commands[x] = []
+  }
+  commands[x][y] = command;
+}
+
+
 let x0 = 0;
 let y0 = 0;
 let length = 0;
@@ -34,21 +35,21 @@ let length = 0;
 const actions = [
   {
     action: (x, y, cell, lines) => {
-      return "R"
+      return addCommand(x, y, 'R');
     },
     matcher: (x, y, cell, lines) => {
       if (cell == '.') {
-        debugger;
-
         if (lines[x - 1][y] == '#' ) {
           if (lines[x + 1][y] == '#' ) {
             if (lines[x][y - 1] == '#' ) {
               printErr('gotone');
+
               return true;
             }
           }
         }
       }
+
       return false;
     },
     name: `
@@ -56,11 +57,37 @@ const actions = [
     #P
      #
     `,
-  }
+  },
+  {
+    action: (x, y, cell, lines) => {
+      return addCommand(x, y, 'L');
+    },
+    matcher: (x, y, cell, lines) => {
+      if (cell == '.') {
+        if (lines[x - 1][y] == '#' ) {
+          if (lines[x + 1][y] == '#' ) {
+            if (lines[x][y + 1] == '#' ) {
+              printErr('gotone');
+
+              return true;
+            }
+          }
+        }
+      }
+
+      return false;
+    },
+    name: `
+     #
+     P#
+     #
+    `,
+  },
 ];
 
 for (let i = 0; i < 10; i++) {
   const line = readline();
+
   lines.push([...line]);
   // printErr('lines', lines.join('\n'));
   let firstDot = line.indexOf('.');
@@ -74,19 +101,28 @@ for (let i = 0; i < 10; i++) {
 
 printErr('x0', x0, 'y0', y0);
 
-const commands = [];
-
 lines.forEach((line, x) => {
   printErr('line', line);
+
   line.forEach((cell, y) => {
     actions.forEach((action) => {
       if (action.matcher(x, y, cell, lines)) {
-        commands.push(x, y, action.action(x, y, cell, lines));
+        action.action(x, y, cell, lines, commands);
       }
-    })
-  })
-})
-printErr('commands',commands.join(' '))
+    });
+  });
+});
+
+const getCommandString = (commands) => {
+  return commands.reduce((acc, item, x) => {
+    return acc + item.reduce((bcc, item, y) => {
+      return bcc + `${x} ${y} ${item} `
+    }, '')
+  }, '');
+}
+
+printErr('commands', getCommandString(commands));
+
 const startPoint = [x0, y0];
 const robotCount = parseInt(readline());
 
@@ -113,4 +149,4 @@ let instructions = [
   x0 + length - 1, y0 + 2, 'L',
   x0 + length - 1, y0 + 3, 'L'
 ];
-print(instructions.join(" "),'0 0 U 1 1 R 2 2 D 3 3 L');
+print(getCommandString(commands));
