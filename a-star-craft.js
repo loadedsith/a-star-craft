@@ -479,7 +479,7 @@ robots.forEach(({x, y, direction}) => {
     addCommand(x, y, '.', newDir);
   }
 });
-
+let maxScore = 40;
 const follow = (direction, x, y, lines, score=0) => {
   printErrJSON('follow', {
     direction,
@@ -506,7 +506,7 @@ const follow = (direction, x, y, lines, score=0) => {
   }
   printErrJSON('next cell getCellCoordsInDir', nextCell,
       getCellCoordsInDir(nextCell, x, y, lines));
-  if (nextCell) {
+  if (nextCell && score <= maxScore) {
     let coords = getCellCoordsInDir(nextCell, x, y, lines);
 
     return follow(neighbors[nextCell], coords.x, coords.y, lines, ++score);
