@@ -19,10 +19,58 @@
   *  \/ >*
   ********
 */
+const printErrJSON = (label='jsonout:', object) => {
+  printErr(label, JSON.stringify(object));
+};
+
 const lines = [];
 const commands = [];
 const mod = (a, n) => {
   return a - n * Math.floor(a/n);
+};
+
+const getCellCoordsInDir = (dir, x, y, lines) => {
+  const northI = mod(y - 1, lines.length);
+  const southI = mod(y + 1, lines.length);
+  const eastI = x + 1;
+  const westI = x - 1;
+
+  return {
+    // x is e-w
+    // y is n-s
+    e:  {
+      x: mod(eastI, lines[y].length),
+      y,
+    },
+    n:  {
+      x,
+      y: northI,
+    },
+    ne: {
+      x: mod(eastI, northI.length),
+      y: northI,
+    },
+    nw: {
+      x: mod(westI, northI.length),
+      y: northI,
+    },
+    s:  {
+      x,
+      y: southI,
+    },
+    se: {
+      x: mod(eastI, southI.length),
+      y: southI,
+    },
+    sw: {
+      x: mod(westI, southI.length),
+      y: southI,
+    },
+    w:  {
+      x: mod(westI, lines[y].length),
+      y,
+    },
+  }[dir];
 };
 
 const getNeighbors = (x, y, cell, lines) => {
@@ -270,7 +318,7 @@ const actions = [
     },
     matcher: (x, y, cell, lines) => {
       if (cell == '.') {
-        const {ne, w, s, n, e} = getNeighbors(x, y, cell, lines);
+        const {w, s, n} = getNeighbors(x, y, cell, lines);
 
         if (w == '#' && s == '#') {
           if (n == 'D') {
@@ -294,7 +342,7 @@ const actions = [
     },
     matcher: (x, y, cell, lines) => {
       if (cell == '.') {
-        const {ne, w, s, n, e} = getNeighbors(x, y, cell, lines);
+        const {s, n, e} = getNeighbors(x, y, cell, lines);
 
         if (e == '#' && s == '#') {
           if (n == 'D') {
@@ -318,7 +366,7 @@ const actions = [
     },
     matcher: (x, y, cell, lines) => {
       if (cell == '.') {
-        const {ne, w, s, n, e} = getNeighbors(x, y, cell, lines);
+        const {s, n, e} = getNeighbors(x, y, cell, lines);
 
         if (e == '#' && s == '#') {
           if (n == 'D') {
@@ -354,9 +402,11 @@ for (let i = 0; i < 10; i++) {
 
 printErr('x0', x0, 'y0', y0);
 
+printErr('map:');
 lines.forEach((line, y) => {
-  printErr('line', line.join(''));
+  printErr(line.join(''));
 });
+
 lines.forEach((line, y) => {
   line.forEach((cell, x) => {
     actions.forEach((action) => {
@@ -377,7 +427,7 @@ const getCommandString = (commands) => {
 
 printErr('commands', getCommandString(commands));
 
-const startPoint = [x0, y0];
+// const startPoint = [x0, y0];
 const robotCount = parseInt(readline());
 
 let robots = [];
@@ -430,13 +480,77 @@ robots.forEach(({x, y, direction}) => {
   }
 });
 
-robots.forEach(({x, y, direction}) => {
+const follow = (direction, x, y, lines, score=0) => {
+  printErrJSON('follow', {
+    direction,
+    score,
+    x,
+    y,
+  });
+  const neighbors = getNeighbors(x, y, direction, lines);
+
+  let nextCell = false;
+  switch (direction) {
+    case 'U':
+      nextCell = 'n';
+      break;
+    case 'D':
+      nextCell = 's';
+      break;
+    case 'R':
+      nextCell = 'e';
+      break;
+    case 'L':
+      nextCell = 'w';
+      break;
+  }
+  printErrJSON('next cell getCellCoordsInDir', nextCell,
+      getCellCoordsInDir(nextCell, x, y, lines));
+  if (nextCell) {
+    let coords = getCellCoordsInDir(nextCell, x, y, lines);
+
+    return follow(neighbors[nextCell], coords.x, coords.y, lines, ++score);
+  }
+
+  return score;
+};
+
+robots.forEach(({x, y, direction}, i) => {
+  printErr('robot', i, ':');
   const neighbors = getNeighbors(x, y, '.', lines);
   const scores = {};
 
-  Object.keys(neighbors).forEach((key) => {
-    const dir = neighbors[key];
+  ['n', 's', 'e', 'w'].forEach((dir) => {
+    printErr('dir', dir);
+    const cell = neighbors[dir];
+    const coords = getCellCoordsInDir(dir, x, y, lines);
+    scores[dir] = follow(cell, coords.x, coords.y, lines);
   });
+
+  printErrJSON('scores', scores);
+  let highScoreDir = Object.keys(scores)
+      .reduce((a, b) => scores[a] > scores[b] ? a : b);
+
+  printErrJSON('highScoreDir', highScoreDir);
+  let command = false;
+  switch (highScoreDir) {
+    case 'n':
+      command = 'U';
+      break;
+    case 's':
+      command = 'D';
+      break;
+    case 'e':
+      command = 'R';
+      break;
+    case 'w':
+      command = 'L';
+      break;
+  }
+  // ?? Ignore the pathfinding if the scores aren't a significant gain ??
+  if (scores[highScoreDir] > 3) {
+    addCommand(x, y, lines[y][x], command);
+  }
 });
 
 // Write an action using print()
