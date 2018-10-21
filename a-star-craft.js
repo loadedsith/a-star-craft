@@ -196,39 +196,64 @@ const addCommand = (x, y, cell, command, lines) => {
   if (isCommandSafe(x, y, cell, command)) {
     commands[y][x] = command;
     lines[y][x] = command;
+    // todo: optimize this here so that it uses the follow logic to pick the best arrow
   }
+
 };
 
-
-let x0 = 0;
-let y0 = 0;
-let length = 0;
-
 const actions = [
-  // {
-  //   action: (x, y, cell, lines) => {
-  //     addCommand(x, y, cell, 'D');
-  //   },
-  //   matcher: (x, y, cell, lines) => {
-  //     if (cell == '.') {
-  //       const {n, e, sw, w, s} = getNeighbors(x, y, cell, lines);
-  //       if (n == '#' && e == '#' && sw == '#') {
-  //         if (w == '.' && s == '.') {
-  //           return true;
-  //         }
-  //       }
-  //     }
-  //
-  //     return false;
-  //   },
-  //   name: `
-  //   #####
-  //   #PPP#
-  //   #PPP#
-  //   #PPP#
-  //   #####
-  //   `,
-  // },
+  {
+    action: (x, y, cell, lines) => {
+      // addCommand(x, y, cell, 'D');
+      printErr('Rectangle!')
+    },
+    matcher: (x, y, cell, lines) => {
+      if (cell == '.') {
+        let {n, e, s} = getNeighbors(x, y, cell, lines);
+        printErr('rectangle cell', x, y);
+        printErr('rectangle next row', x, y + 1);
+        let startX = x;
+        let startY = y;
+        let coords = getCellCoordsInDir('e', x, y, lines);
+        let nextX = coords.x;
+        let nextY = coords.y;
+        let rectangle = [x, y];
+        let length = 1;
+        let height = 1;
+        while (e != '#' && nextX != startX) {
+          printErr('rectangle cell', coords.x, coords.y);
+          coords = getCellCoordsInDir('e', nextX, nextY, lines);
+          e = getNeighbors(coords.x, coords.y, e, lines).e;
+          let nextRowFirstCell = lines[nextY + 1][startX];
+          printErr('nextRowFirstCell', nextRowFirstCell);
+          nextX = coords.x;
+          nextY = coords.y;
+
+          if (e == '#' && nextRowFirstCell != '#') {
+            nextX = startX + 1;
+            nextY += 1;
+            height = +1;
+            e = nextRowFirstCell;
+          } else {
+            length = +1;
+          }
+
+        }
+        printErr('e, nextX, startX', e, nextX, startX);
+        printErr('length height: ', length, height);
+        return true;
+      }
+
+      return false;
+    },
+    name: `
+    #####
+    #PPP#
+    #PPP#
+    #PPP#
+    #####
+    `,
+  },
   {
     action: (x, y, cell, lines) => {
       addCommand(x, y, cell, 'R', lines);
@@ -488,33 +513,16 @@ const actions = [
 
 ];
 
+printErr('map:');
 for (let i = 0; i < 10; i++) {
   const line = readline();
-
   lines.push([...line]);
-  // printErr('lines', lines.join('\n'));
-  let firstDot = line.indexOf('.');
-  if (!x0 && firstDot > -1) {
-    x0 = firstDot;
-    y0 = i;
-    length = line.match(/\./g).length;
-  }
-  // printErr('length', length);
+  printErr(line);
 }
-
-printErr('x0', x0, 'y0', y0);
-
-printErr('map:');
-lines.forEach((line, y) => {
-  printErr(line.join(''));
-});
 
 lines.forEach((line, y) => {
   line.forEach((cell, x) => {
     actions.forEach((action) => {
-      if (x == 0 && y == 2) {
-        printErr('0,2', action.matcher(x, y, cell, lines))
-      }
       if (action.matcher(x, y, cell, lines)) {
         action.action(x, y, cell, lines, commands);
       }
