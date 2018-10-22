@@ -807,97 +807,97 @@ const actions = [
      #P#
     `,
   },
-  {
-    action: function(x, y, cell) {
-      this.addCommand(x, y, cell, 'D');
-      this.addCommand(x, y+1, cell, 'L');
-    },
-    matcher: function(x, y, cell) {
-      if (cell == '.'||isArrow(cell)) {
-        const {e,se} = this.getNeighbors(x, y, cell);
-
-        if (e == '#' && se == '#') {
-          return true;
-        }
-      }
-
-      return false;
-    },
-    name: `
-     P#
-     P#
-    `,
-  },
-  {
-    action: function(x, y, cell) {
-      this.addCommand(x, y, cell, 'D');
-      this.addCommand(x, y+1, cell, 'R');
-    },
-    matcher: function(x, y, cell) {
-      if (cell == '.'||isArrow(cell)) {
-        const {w,sw} = this.getNeighbors(x, y, cell);
-
-        if (w == '#' && sw == '#') {
-          return true;
-        }
-      }
-
-      return false;
-    },
-    name: `
-     #P
-     #P
-    `,
-  },
-  {
-    action: function(x, y, cell) {
-      this.addCommand(x, y, cell, 'D');
-      this.addCommand(x+1, y, cell, 'R');
-    },
-    matcher: function(x, y, cell) {
-      if (cell == '.'||isArrow(cell)) {
-        const {n,ne} = this.getNeighbors(x, y, cell);
-
-        if (n == '#' && ne == '#') {
-          return true;
-        }
-      }
-
-      return false;
-    },
-    name: `
-     ##
-     PP
-    `,
-  },
-  {
-    action: function(x, y, cell) {
-      this.addCommand(x, y, cell, 'U');
-      this.addCommand(x+1, y, cell, 'L');
-    },
-    matcher: function(x, y, cell) {
-      if (cell == '.'||isArrow(cell)) {
-        const {s,se} = this.getNeighbors(x, y, cell);
-
-        if (s == '#' && se == '#') {
-          return true;
-        }
-      }
-
-      return false;
-    },
-    name: `
-     PP
-     ##
-    `,
-  },
+  // {
+  //   action: function(x, y, cell) {
+  //     this.addCommand(x, y, cell, 'D');
+  //     this.addCommand(x, y+1, cell, 'L');
+  //   },
+  //   matcher: function(x, y, cell) {
+  //     if (cell == '.'||isArrow(cell)) {
+  //       const {e,se} = this.getNeighbors(x, y, cell);
+  //
+  //       if (e == '#' && se == '#') {
+  //         return true;
+  //       }
+  //     }
+  //
+  //     return false;
+  //   },
+  //   name: `
+  //    P#
+  //    P#
+  //   `,
+  // },
+  // {
+  //   action: function(x, y, cell) {
+  //     this.addCommand(x, y, cell, 'D');
+  //     this.addCommand(x, y+1, cell, 'R');
+  //   },
+  //   matcher: function(x, y, cell) {
+  //     if (cell == '.'||isArrow(cell)) {
+  //       const {w,sw} = this.getNeighbors(x, y, cell);
+  //
+  //       if (w == '#' && sw == '#') {
+  //         return true;
+  //       }
+  //     }
+  //
+  //     return false;
+  //   },
+  //   name: `
+  //    #P
+  //    #P
+  //   `,
+  // },
+  // {
+  //   action: function(x, y, cell) {
+  //     this.addCommand(x, y, cell, 'D');
+  //     this.addCommand(x+1, y, cell, 'R');
+  //   },
+  //   matcher: function(x, y, cell) {
+  //     if (cell == '.'||isArrow(cell)) {
+  //       const {n,ne} = this.getNeighbors(x, y, cell);
+  //
+  //       if (n == '#' && ne == '#') {
+  //         return true;
+  //       }
+  //     }
+  //
+  //     return false;
+  //   },
+  //   name: `
+  //    ##
+  //    PP
+  //   `,
+  // },
+  // {
+  //   action: function(x, y, cell) {
+  //     this.addCommand(x, y, cell, 'U');
+  //     this.addCommand(x+1, y, cell, 'L');
+  //   },
+  //   matcher: function(x, y, cell) {
+  //     if (cell == '.'||isArrow(cell)) {
+  //       const {s,se} = this.getNeighbors(x, y, cell);
+  //
+  //       if (s == '#' && se == '#') {
+  //         return true;
+  //       }
+  //     }
+  //
+  //     return false;
+  //   },
+  //   name: `
+  //    PP
+  //    ##
+  //   `,
+  // },
   {
     action: function(x, y, cell) {
       this.addCommand(x, y, cell, randomDir());
     },
     matcher: function(x, y, cell) {
       if (cell == '.') {
-        return Math.random() > .85;
+        return Math.random() < .2;
       }
 
       return false;
