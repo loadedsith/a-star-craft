@@ -106,72 +106,6 @@ const randomDir = function() {
   return ['U', 'D', 'L', 'R'][Math.floor(Math.random() * 4)];
 };
 
-const pickTheBestDirection = function(x, y, map, startingDir) {
-  const neighbors = map.getNeighbors(x, y, '.');
-  const scores = {};
-  let command = startingDir;
-  ['n', 's', 'e', 'w'].forEach((dir) => {
-    // printErrJSON('dir', dir);
-    const cell = neighbors[dir];
-    const coords = map.getCellCoordsInDir(dir, x, y);
-    const tmpLines = JSON.parse(JSON.stringify(map.lines));
-    tmpLines[y][x] = dirToArrow(dir);
-    let tmpMap = new Map(tmpLines);
-    scores[dir] = follow(cell, coords.x, coords.y, tmpMap, dir);
-  });
-
-  printErrJSON(`scores ${x} ${y}`, scores);
-  let highScoreDir = Object.keys(scores)
-      .reduce((a, b) => scores[a] > scores[b] ? a : b);
-  // printErrJSON('Bcommand', command);
-  // printErrJSON('highScoreDir', scores[highScoreDir]);
-  // printErrJSON('highScoreDir', dirToArrow(highScoreDir));
-  // ?? Ignore the pathfinding if the scores aren't a significant gain ??
-  if (scores[highScoreDir] > 1) {
-    command = dirToArrow(highScoreDir);
-  }
-  // printErrJSON('Acommand', command);
-  return command;
-};
-
-const follow = (cell, x, y, map, lastDir, steps=[], score=0, maxScore=40) => {
-  const neighbors = map.getNeighbors(x, y, cell);
-  let debug = false;
-  let nextCell = false;
-
-  if (isArrow(cell)) {
-    // printErr('isArrow')
-    nextCell = arrowToDir(cell);
-    lastDir = nextCell;
-  } else if (cell != '#') {
-    // printErr('is not #, last dir:', lastDir)
-    nextCell = lastDir;
-  } else {
-    // printErr('thats a #, abort');
-    return score;
-  }
-
-  const stepSignature = `${x} ${y} ${nextCell}`;
-  // printErr('step', `${x} ${y} ${nextCell} ${cell}`);
-  if (nextCell && !steps.includes(stepSignature) && score <= maxScore) {
-    // printErrJSON('nextCell:', nextCell)
-    let coords = map.getCellCoordsInDir(nextCell, x, y);
-    steps.push(`${x} ${y} ${nextCell}`);
-
-    return follow(
-        neighbors[nextCell],
-        coords.x,
-        coords.y,
-        map,
-        lastDir,
-        steps,
-        ++score,
-        maxScore);
-  }
-
-  return score;
-};
-
 /** Map */
 class Map {
   /**
@@ -187,6 +121,83 @@ class Map {
   }
 
   /**
+   * Follow
+   * @param {string} cell Cell
+   * @param {number} x X
+   * @param {number} y Y
+   * @param {Map} map Map
+   * @param {string} lastDir LastDir
+   * @param {Array} steps Steps
+   * @param {number} score Score
+   * @param {number} maxScore MaxScore
+   * @return {number} Score
+   */
+  static follow(cell, x, y, map, lastDir, steps=[], score=0, maxScore=40) {
+    const neighbors = map.getNeighbors(x, y, cell);
+    let nextCell = false;
+
+    if (isArrow(cell)) {
+      nextCell = arrowToDir(cell);
+      lastDir = nextCell;
+    } else if (cell != '#') {
+      nextCell = lastDir;
+    } else {
+      return score;
+    }
+
+    const stepSignature = `${x} ${y} ${nextCell}`;
+    if (nextCell && !steps.includes(stepSignature) && score <= maxScore) {
+      let coords = map.getCellCoordsInDir(nextCell, x, y);
+      steps.push(`${x} ${y} ${nextCell}`);
+
+      return Map.follow(
+          neighbors[nextCell],
+          coords.x,
+          coords.y,
+          map,
+          lastDir,
+          steps,
+          ++score,
+          maxScore);
+    }
+
+    return score;
+  };
+
+  /**
+   * pickTheBestDirection
+   * @param {number} x X
+   * @param {number} y Y
+   * @param {Map} map Map
+   * @param {string} startingDir StartingDir
+   * @return {string}
+   */
+  static pickTheBestDirection(x, y, map, startingDir) {
+    const neighbors = map.getNeighbors(x, y, '.');
+    const scores = {};
+    let command = startingDir;
+    ['n', 's', 'e', 'w'].forEach((dir) => {
+      // printErrJSON('dir', dir);
+      const cell = neighbors[dir];
+      const coords = map.getCellCoordsInDir(dir, x, y);
+      const tmpLines = JSON.parse(JSON.stringify(map.lines));
+      tmpLines[y][x] = dirToArrow(dir);
+      let tmpMap = new Map(tmpLines);
+      scores[dir] = Map.follow(cell, coords.x, coords.y, tmpMap, dir);
+    });
+
+    // printErrJSON(`scores ${x} ${y}`, scores);
+    let highScoreDir = Object.keys(scores)
+        .reduce((a, b) => scores[a] > scores[b] ? a : b);
+    // ?? Ignore the pathfinding if the scores aren't a significant gain ??
+    if (scores[highScoreDir] > 1) {
+      command = dirToArrow(highScoreDir);
+    }
+
+    return command;
+  };
+
+  /**
    * getNeighbors
    * @param {number} x X
    * @param {number} y Y
@@ -200,12 +211,7 @@ class Map {
     const eastI = x + 1;
     const westI = x - 1;
     const linesY = lines[mod(y, lines.length)];
-    if (x == 5 && y == 0) {
-      printErr('linesY', linesY)
-      printErr('linesY.length', linesY.length)
-      printErr('mod(westI, linesY.length)', mod(westI, linesY.length))
-      printErr('w', (linesY || [])[mod(westI, linesY.length)]);
-    }
+
     return {
       // x is e-w
       // y is n-s
@@ -227,11 +233,6 @@ class Map {
         this.actions.forEach((action) => {
           if (action.matcher.call(this, x, y, cell)) {
             action.action.call(this, x, y, cell);
-            printErr('map:');
-            for (let i = 0; i < 10; i++) {
-              printErr(this.lines[i]);
-            }
-
           }
         });
       });
@@ -336,6 +337,18 @@ class Map {
     }[dir];
   };
 
+  optimizeCommands() {
+    for (var i = 0; i < 10; i++) {
+      this.commands.forEach((commandRow, y) => {
+        commandRow.forEach((command, x) => {
+          command = Map.pickTheBestDirection(x, y, this, command);
+          this.lines[y][x] = command;
+          this.commands[y][x] = command;
+        });
+      });
+    }
+  }
+
   /**
    * addCommand
    * @param {number} x X
@@ -352,7 +365,7 @@ class Map {
     }
 
     if (this.isCommandSafe(x, y, cell, command)) {
-      command = pickTheBestDirection(x, y, this, command);
+      command = Map.pickTheBestDirection(x, y, this, command);
       if (this.lines[y][x] != '#') {
         this.commands[y][x] = command;
         this.lines[y][x] = command;
@@ -384,10 +397,11 @@ const actions = [
         let length = 1;
         let height = 1;
 
-        while (e != '#' && nextX != startX && length <= 4 && height <= 4 && !steps.includes(`${nextX} ${nextY}`)) {
-          printErrJSON('steps',steps);
-          printErrJSON('length',length);
-          printErrJSON('height',height);
+        while (e != '#' &&
+            nextX != startX &&
+            length <= 4 &&
+            height <= 4 &&
+            !steps.includes(`${nextX} ${nextY}`)) {
           steps.push(`${nextX} ${nextY}`);
           // printErr('rectangle cell', coords.x, coords.y);
           coords = this.getCellCoordsInDir('e', nextX, nextY);
@@ -427,7 +441,6 @@ const actions = [
       this.addCommand(x, y, cell, 'R');
     },
     matcher: function(x, y, cell) {
-      return false
       if (cell == '.') {
         const {n, w, s} = this.getNeighbors(x, y, cell);
 
@@ -449,7 +462,6 @@ const actions = [
       this.addCommand(x, y, cell, 'L');
     },
     matcher: function(x, y, cell) {
-      return false
       if (cell == '.') {
         const {n, e, s} = this.getNeighbors(x, y, cell);
 
@@ -472,17 +484,12 @@ const actions = [
       // printErr('>.', x, y, cell, 'R');
     },
     matcher: function(x, y, cell) {
-      return false
-
       if (cell == '.' || isArrow(cell)) {
-        const {n, w, se, e, s} = this.getNeighbors(x, y, cell);
+        const {n, w, e, s} = this.getNeighbors(x, y, cell);
 
         if (n == '#' && w == '#') {
           if (e == '.' && s == '.') {
             return true;
-          } else {
-            // printErr('match x y', x, y);
-            // printErr('e and s', e, s);
           }
         }
       }
@@ -500,10 +507,8 @@ const actions = [
       this.addCommand(x, y, cell, 'D');
     },
     matcher: function(x, y, cell) {
-      return false
-
       if (cell == '.') {
-        const {n, e, sw, w, s} = this.getNeighbors(x, y, cell);
+        const {n, e, w, s} = this.getNeighbors(x, y, cell);
         if (n == '#' && e == '#') {
           if (w == '.' && s == '.') {
             return true;
@@ -524,10 +529,8 @@ const actions = [
       this.addCommand(x, y, cell, 'L');
     },
     matcher: function(x, y, cell) {
-      return false
-
       if (cell == '.') {
-        const {nw, e, s, n, w} = this.getNeighbors(x, y, cell);
+        const {e, s, n, w} = this.getNeighbors(x, y, cell);
 
         if (e == '#' && s == '#') {
           if (n == '.' && w == '.') {
@@ -549,10 +552,8 @@ const actions = [
       this.addCommand(x, y, cell, 'U');
     },
     matcher: function(x, y, cell) {
-      return false
-
       if (cell == '.' || isArrow(cell)) {
-        const {ne, w, s, n, e} = this.getNeighbors(x, y, cell, this.lines);
+        const {w, s, n, e} = this.getNeighbors(x, y, cell, this.lines);
 
         if (w == '#' && s == '#') {
           if (n == '.' && e == '.') {
@@ -574,8 +575,6 @@ const actions = [
       this.addCommand(x, y, cell, 'D');
     },
     matcher: function(x, y, cell) {
-      return false
-
       if (cell == '.') {
         const {n, s, sw, se} = this.getNeighbors(x, y, cell);
 
@@ -596,16 +595,64 @@ const actions = [
   },
   {
     action: function(x, y, cell) {
+      this.addCommand(x, y, cell, 'D');
+    },
+    matcher: function(x, y, cell) {
+      if (cell == '.') {
+        const {w, e, ne, se} = this.getNeighbors(x, y, cell);
+
+        if (w == '#') {
+          if (e == '.' && ne == '.' && se == '.') {
+            return true;
+          }
+        }
+      }
+
+      return false;
+    },
+    name: `
+      P
+    #PP
+      P
+    `,
+  },
+  {
+    action: function(x, y, cell) {
+      this.addCommand(x, y, cell, 'D');
+    },
+    matcher: function(x, y, cell) {
+      if (cell == '.') {
+        const {e, nw, ne, se} = this.getNeighbors(x, y, cell);
+
+        if (e == '#') {
+          if ((nw == '.' || isArrow(nw)) &&
+            (ne == '.'|| isArrow(ne)) &&
+            (se == '.'|| isArrow(se))) {
+            return true;
+          }
+        }
+      }
+
+      return false;
+    },
+    name: `
+    P
+    PP#
+    P
+    `,
+  },
+  {
+    action: function(x, y, cell) {
       this.addCommand(x, y, cell, 'U');
     },
     matcher: function(x, y, cell) {
-      return false
-
       if (cell == '.') {
         const {n, s, ne, nw} = this.getNeighbors(x, y, cell);
 
         if (s == '#') {
-          if (n == '.' && ne == '.' && nw == '.') {
+          if ((n == '.' || isArrow(n)) &&
+              (ne == '.' || isArrow(ne)) &&
+              (nw == '.' || isArrow(nw))) {
             return true;
           }
         }
@@ -621,13 +668,11 @@ const actions = [
   },
   {
     action: function(x, y, cell) {
-      this.addCommand(x, y, cell, 'R', map);
+      this.addCommand(x, y, cell, 'R');
     },
     matcher: function(x, y, cell) {
-      return false
-
       if (cell == '.') {
-        const {w, s, n} = this.getNeighbors(x, y, cell, lines);
+        const {w, s, n} = this.getNeighbors(x, y, cell);
 
         if (w == '#' && s == '#') {
           if (n == 'D') {
@@ -650,8 +695,6 @@ const actions = [
       this.addCommand(x, y, cell, 'L');
     },
     matcher: function(x, y, cell) {
-      return false
-
       if (cell == '.') {
         const {s, n, e} = this.getNeighbors(x, y, cell, this.lines);
 
@@ -676,8 +719,6 @@ const actions = [
       this.addCommand(x, y, cell, 'L');
     },
     matcher: function(x, y, cell) {
-      return false
-
       if (cell == '.') {
         const {s, n, e} = this.getNeighbors(x, y, cell);
 
@@ -696,7 +737,6 @@ const actions = [
      #
     `,
   },
-
   {
     action: function(x, y, cell) {
       this.addCommand(x - 1, y, cell, 'U');
@@ -708,13 +748,13 @@ const actions = [
     matcher: function(x, y, cell) {
       if (x==5 && y==0) {
         const neighbors = this.getNeighbors(x, y, cell);
-        printErrJSON('neighbors', neighbors);
+        // printErrJSON('neighbors', neighbors);
         printErr('x', x);
         printErr('y', y);
         printErr('cell', cell);
       }
       if (cell == '.'||isArrow(cell)) {
-        const {n, ne, e, se, s, sw, w, nw} = this.getNeighbors(x, y, cell);
+        const {n, ne, e, se, s, sw, w} = this.getNeighbors(x, y, cell);
 
         if (w == '#' && sw == '#' && ne == '#' && se == '#') {
           if (
@@ -722,7 +762,6 @@ const actions = [
             (n == '.'||isArrow(n)) &&
             (s == '.'||isArrow(s))
           ) {
-            printErr(`${x} ${y} -----`)
             return true;
           }
         }
@@ -746,7 +785,7 @@ const actions = [
     },
     matcher: function(x, y, cell) {
       if (cell == '.'||isArrow(cell)) {
-        const {n, ne, e, se, s, sw, w, nw} = this.getNeighbors(x, y, cell);
+        const {n, e, se, s, sw, w, nw} = this.getNeighbors(x, y, cell);
 
         if (nw == '#' && e == '#' && sw == '#' && se == '#') {
           if (
@@ -767,7 +806,19 @@ const actions = [
      #P#
     `,
   },
+  {
+    action: function(x, y, cell) {
+      this.addCommand(x, y, cell, randomDir());
+    },
+    matcher: function(x, y, cell) {
+      if (cell == '.') {
+        return Math.random() > .85;
+      }
 
+      return false;
+    },
+    name: 'Random',
+  },
 ];
 
 printErr('map:');
@@ -844,25 +895,25 @@ robots.forEach(({x, y, direction}, i) => {
     const tmpLines = JSON.parse(JSON.stringify(map.lines));
     tmpLines[y][x] = dirToArrow(dir);
     let tmpMap = new Map(tmpLines);
-    scores[dir] = follow(cell, coords.x, coords.y, tmpMap, dir);
+    scores[dir] = Map.follow(cell, coords.x, coords.y, tmpMap, dir);
   });
 
-  printErrJSON('scores', scores);
+  // printErrJSON('scores', scores);
   let highScoreDir = Object.keys(scores)
       .reduce((a, b) => scores[a] > scores[b] ? a : b);
 
-  printErrJSON('highScoreDir', highScoreDir);
+  // printErrJSON('highScoreDir', highScoreDir);
   let command = dirToArrow(highScoreDir);
-  printErrJSON('command', command);
+  // printErrJSON('command', command);
   // ?? Ignore the pathfinding if the scores aren't a significant gain ??
   if (scores[highScoreDir] > 1) {
     map.addCommand(x, y, lines[y][x], command);
-  } else {
-
   }
 });
 
 // Write an action using print()
 // To debug: printErr('Debug messages...');
+printErr('commands', map.getCommandString());
+map.optimizeCommands();
 printErr('commands', map.getCommandString());
 print(map.getCommandString());
