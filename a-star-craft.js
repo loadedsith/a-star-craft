@@ -342,6 +342,7 @@ class Map {
       this.commands.forEach((commandRow, y) => {
         commandRow.forEach((command, x) => {
           command = Map.pickTheBestDirection(x, y, this, command);
+          command = Math.random() > .05 ? command : randomDir();
           this.lines[y][x] = command;
           this.commands[y][x] = command;
         });
@@ -365,7 +366,7 @@ class Map {
     }
 
     if (this.isCommandSafe(x, y, cell, command)) {
-      command = Map.pickTheBestDirection(x, y, this, command);
+      // command = Map.pickTheBestDirection(x, y, this, command);
       if (this.lines[y][x] != '#') {
         this.commands[y][x] = command;
         this.lines[y][x] = command;
@@ -808,6 +809,90 @@ const actions = [
   },
   {
     action: function(x, y, cell) {
+      this.addCommand(x, y, cell, 'D');
+      this.addCommand(x, y+1, cell, 'L');
+    },
+    matcher: function(x, y, cell) {
+      if (cell == '.'||isArrow(cell)) {
+        const {e,se} = this.getNeighbors(x, y, cell);
+
+        if (e == '#' && se == '#') {
+          return true;
+        }
+      }
+
+      return false;
+    },
+    name: `
+     P#
+     P#
+    `,
+  },
+  {
+    action: function(x, y, cell) {
+      this.addCommand(x, y, cell, 'D');
+      this.addCommand(x, y+1, cell, 'R');
+    },
+    matcher: function(x, y, cell) {
+      if (cell == '.'||isArrow(cell)) {
+        const {w,sw} = this.getNeighbors(x, y, cell);
+
+        if (w == '#' && sw == '#') {
+          return true;
+        }
+      }
+
+      return false;
+    },
+    name: `
+     #P
+     #P
+    `,
+  },
+  {
+    action: function(x, y, cell) {
+      this.addCommand(x, y, cell, 'D');
+      this.addCommand(x+1, y, cell, 'R');
+    },
+    matcher: function(x, y, cell) {
+      if (cell == '.'||isArrow(cell)) {
+        const {n,ne} = this.getNeighbors(x, y, cell);
+
+        if (n == '#' && ne == '#') {
+          return true;
+        }
+      }
+
+      return false;
+    },
+    name: `
+     ##
+     PP
+    `,
+  },
+  {
+    action: function(x, y, cell) {
+      this.addCommand(x, y, cell, 'U');
+      this.addCommand(x+1, y, cell, 'L');
+    },
+    matcher: function(x, y, cell) {
+      if (cell == '.'||isArrow(cell)) {
+        const {s,se} = this.getNeighbors(x, y, cell);
+
+        if (s == '#' && se == '#') {
+          return true;
+        }
+      }
+
+      return false;
+    },
+    name: `
+     PP
+     ##
+    `,
+  },
+  {
+    action: function(x, y, cell) {
       this.addCommand(x, y, cell, randomDir());
     },
     matcher: function(x, y, cell) {
@@ -914,6 +999,7 @@ robots.forEach(({x, y, direction}, i) => {
 // Write an action using print()
 // To debug: printErr('Debug messages...');
 printErr('commands', map.getCommandString());
+map.optimizeCommands();
 map.optimizeCommands();
 printErr('commands', map.getCommandString());
 print(map.getCommandString());
