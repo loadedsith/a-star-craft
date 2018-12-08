@@ -5,11 +5,14 @@
   "main": "index.js",
   "scripts": {
     "test": "jasmine",
-    "watch": "nodemon --ext js,jade --exec 'npm run test'"
+    "watchtest": "nodemon --ignore bundle.js --ext js,jade --exec 'npm run test'",
+    "watch": "nodemon --ignore bundle.js --ext js,jade --exec 'npm run build'",
+    "build": "npx browserify index.js -o bundle.js"
   },
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "browserify": "^16.2.3",
     "jasmine": "^3.3.1"
   }
 }

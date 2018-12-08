@@ -1,5 +1,6 @@
 {
   "spec_files": [
+    "!node_modules/**/*.js",
     "**/*_test.js"
   ],
   "helpers": [
