@@ -26,7 +26,7 @@ class XmasRush {
 
     for (let i = 0; i < 2; i++) {
       const inputs = this.readline().split(' ');
-      this.player[i] = {
+      this.players[i] = {
         // The total number of quests for a player (hidden and revealed).
         numPlayerCards: parseInt(inputs[0]),
         playerTile: inputs[3],

@@ -13,7 +13,7 @@ if (typeof readline === 'undefined') {
 
 
 const XmasRush = require('./xmasRush.js');
-const xmasRush = XmasRush(readline_);
+const xmasRush = new XmasRush(readline_);
 
 // game loop
 while (true) {
