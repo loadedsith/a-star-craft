@@ -1,7 +1,7 @@
 const XmasRush = require('./xmasRush.js');
 const lines = require('./lines.js');
 
-describe('Xmas Rush', () => {
+describe('Xmas Rush, level one, basics', () => {
   let xmasRush;
 
   beforeEach(() => {
@@ -42,6 +42,19 @@ describe('Xmas Rush', () => {
     xmasRush.players.forEach((player, index) => {
       let goals = xmasRush.getPlayerQuests(index);
       expect(goals.length).toEqual(1);
+      expect(goals[0]).toEqual({
+        questItemName: 'ARROW',
+        questPlayerId: index,
+      });
     });
   });
+
+  it('should get the right items for each player', () => {
+    xmasRush.players.forEach((player, index) => {
+      let items = xmasRush.getPlayerItems(index);
+      expect(items.length).toEqual(1);
+      expect(items[0].itemPlayerId).toEqual(index);
+    });
+  });
+
 });

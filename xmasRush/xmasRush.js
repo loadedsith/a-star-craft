@@ -70,6 +70,10 @@ class XmasRush {
   getPlayerQuests(playerIndex) {
     return this.quests.filter((quest) => playerIndex === quest.questPlayerId);
   }
+
+  getPlayerItems(playerIndex) {
+    return this.items.filter((item) => playerIndex === item.itemPlayerId);
+  }
 }
 
 module.exports = XmasRush;
