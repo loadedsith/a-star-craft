@@ -1,9 +1,4 @@
-const DIRECTIONS = [
-  'UP',
-  'RIGHT',
-  'DOWN',
-  'LEFT',
-];
+const DIRECTIONS = require('./directions.js')
 
 class Tile {
   constructor(tile) {
@@ -13,11 +8,13 @@ class Tile {
 
   static getExits(tile) {
     if (!tile) {
-      tile = '0000';
+      return {};
     }
 
-    return DIRECTIONS.reduce((acc, direction, index) => {
-      acc[direction] = tile[index] === '1' ? true : false;
+    return Object.keys(DIRECTIONS).reduce((acc, direction, index) => {
+      if (tile[index] === '1') {
+        acc[direction] = true;
+      }
 
       return acc;
     }, {});

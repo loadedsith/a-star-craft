@@ -6,22 +6,13 @@ describe('Tile',() => {
   })
   it('should return correct exits', () => {
     let exits = Tile.getExits();
-    expect(exits).toEqual({
-      'UP': false,
-      'RIGHT': false,
-      'DOWN': false,
-      'LEFT': false,
-    });
+    expect(exits).toEqual({});
 
     exits = Tile.getExits('0000');
-    expect(exits).toEqual({
-      'UP': false,
-      'RIGHT': false,
-      'DOWN': false,
-      'LEFT': false,
-    });
+    expect(exits).toEqual({});
 
     exits = Tile.getExits('1111');
+    console.log({exits});
     expect(exits).toEqual({
       'UP': true,
       'RIGHT': true,
@@ -31,19 +22,17 @@ describe('Tile',() => {
 
 
     exits = Tile.getExits('1010');
+    console.log({exits});
     expect(exits).toEqual({
       'UP': true,
-      'RIGHT': false,
       'DOWN': true,
-      'LEFT': false,
     });
 
 
     exits = Tile.getExits('0101');
+    console.log({exits});
     expect(exits).toEqual({
-      'UP': false,
       'RIGHT': true,
-      'DOWN': false,
       'LEFT': true,
     });
   })

@@ -1,16 +1,17 @@
 const Player = require('./player.js');
+const Item = require('./item.js');
+const Tile = require('./tile.js');
+const DIRECTIONS = require('./directions.js');
 
 /** Challenge class. */
 class XmasRush {
   constructor(readline_, printErr_) {
-    let lines;
-
     Object.assign(this, {
       items: [],
       players: [],
+      printErr: printErr_,
       quests: [],
       readline: readline_,
-      printErr: printErr_,
       tiles: [[]],
       turnType: null,
     });
@@ -30,7 +31,7 @@ class XmasRush {
       const inputs = this.readline().split(' ');
       this.tiles[i] = [];
       for (let j = 0; j < 7; j++) {
-        this.tiles[i].push(inputs[j]);
+        this.tiles[i].push(new Tile(inputs[j]));
       }
     }
 
@@ -48,12 +49,12 @@ class XmasRush {
     const numItems = parseInt(this.readline());
     for (let i = 0; i < numItems; i++) {
       const inputs = this.readline().split(' ');
-      this.items.push({
+      this.items.push(new Item({
         itemName: inputs[0],
         itemPlayerId: parseInt(inputs[3]),
         itemX: parseInt(inputs[1]),
         itemY: parseInt(inputs[2]),
-      });
+      }));
     }
 
     // The total number of revealed quests for both players.
@@ -72,7 +73,78 @@ class XmasRush {
   }
 
   getPlayerItems(playerIndex) {
-    return this.items.filter((item) => playerIndex === item.itemPlayerId);
+    return this.items.filter((item) => playerIndex === item.playerId);
+  }
+
+  getTile(location) {
+    return this.tiles[location.x][location.y];
+  }
+
+  getOpenNeighbors(tile, location) {
+    console.log({exits: tile.exits});
+    return Object.keys(tile.exits).reduce((acc, directionKey) => {
+      console.log({directionKey});
+      let neighborLocation = this.getRelativeLocation(directionKey, location);
+      let neighborExits = this.getTile(neighborLocation).exits;
+      let reversedDirections = {
+        UP: 'DOWN',
+        RIGHT: 'LEFT',
+        DOWN: 'UP',
+        LEFT: 'RIGHT',
+      }
+      let reversedDirection = reversedDirections[directionKey];
+      if (neighborExits[reversedDirection]) {
+        acc[directionKey] = true;
+      }
+      console.log({neighborExits});
+
+      return acc
+    }, {});
+  }
+
+  getRelativeLocation(direction, location) {
+    if (typeof direction.x === 'undefined' &&
+        typeof direction.y === 'undefined') {
+      direction = DIRECTIONS[direction];
+    }
+
+    let newLocation = {
+      x: location.x + (direction.x || 0),
+      y: location.y + (direction.y || 0),
+    };
+    if (newLocation.x >= 0 && newLocation.x < this.tiles.length &&
+        newLocation.y >= 0 && newLocation.y < this.tiles[0].length) {
+      return newLocation;
+    }
+
+    return {};
+  }
+
+  getPath(locationStart, locationEnd) {
+    let start = {
+      x: locationStart.x,
+      y: locationStart.y};
+    let end = {
+      x: locationEnd.x,
+      y: locationEnd.y};
+    let currentTile = this.tiles[start.x][start.y];
+    let lastTile = this.tiles[end.x][end.y];
+    let path = Object.keys(currentTile.exits).map((exitKey) => {
+      // Each exit from this square has a score, the score
+      // is the optimal distance to the goal from this square.
+      let exit = currentTile.exits[exitKey];
+      let neighbor = this.getRelativeLocation();
+    }).reduce((bestProbe, exitProbe) => {
+      if (!bestProbe) {
+        return exitProbe;
+      }
+
+      if (bestProbe.score < exitProbe.score) {
+        return exitProbe;
+      }
+    })
+    this.printErr({path});
+    return path;
   }
 }
 
