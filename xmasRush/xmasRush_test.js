@@ -107,12 +107,10 @@ describe('Xmas Rush, level one, basics', () => {
           x: 0,
           y: 0,
         });
-    console.log({openNeighbors});
     expect(openNeighbors).toEqual({
       'RIGHT': true,
       'DOWN': true,
     });
-    console.log({openNeighbors, tile: xmasRush.tiles[3][3]});
     openNeighbors = xmasRush.getOpenNeighbors(xmasRush.tiles[3][3],
         {
           x: 3,
@@ -121,6 +119,15 @@ describe('Xmas Rush, level one, basics', () => {
     expect(openNeighbors).toEqual({
       'LEFT': true,
       'RIGHT': true,
+    });
+    openNeighbors = xmasRush.getOpenNeighbors(xmasRush.tiles[6][6],
+        {
+          x: 6,
+          y: 6,
+        });
+    expect(openNeighbors).toEqual({
+      'UP': true,
+      'LEFT': true,
     });
   });
 

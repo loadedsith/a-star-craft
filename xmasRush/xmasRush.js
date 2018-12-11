@@ -81,9 +81,7 @@ class XmasRush {
   }
 
   getOpenNeighbors(tile, location) {
-    console.log({exits: tile.exits});
     return Object.keys(tile.exits).reduce((acc, directionKey) => {
-      console.log({directionKey});
       let neighborLocation = this.getRelativeLocation(directionKey, location);
       let neighborExits = this.getTile(neighborLocation).exits;
       let reversedDirections = {
@@ -96,7 +94,6 @@ class XmasRush {
       if (neighborExits[reversedDirection]) {
         acc[directionKey] = true;
       }
-      console.log({neighborExits});
 
       return acc
     }, {});
