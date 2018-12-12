@@ -57,13 +57,19 @@ describe('Xmas Rush, level one, basics', () => {
     });
   });
 
-  // it('should a path between 2 items', () => {
-  //   let start = {x:0, y:0};
-  //   let end = {x:1, y:1};
-  //   let path = xmasRush.getPath(start, end);
-  //
-  //   expect(path.length).toBe(1);
-  // });
+  it('should a path between 2 items', () => {
+    let start = {
+      x: 0,
+      y: 0};
+    let end = {
+      x: 1,
+      y: 1};
+    let path = xmasRush.getPath(start, end);
+
+    expect(path).toBe([{
+      x: 1,
+      y: 1}]);
+  });
 
   it('should get neighbors', () => {
     let maxTileRow = xmasRush.tiles.length - 1;
@@ -71,35 +77,51 @@ describe('Xmas Rush, level one, basics', () => {
 
     let testLocation;
 
-    testLocation = xmasRush.getRelativeLocation('DOWN', {x:0, y:0});
-    expect(testLocation).toEqual({x:1, y:0});
-    testLocation = xmasRush.getRelativeLocation('DOWN', {x:3, y:0});
-    expect(testLocation).toEqual({x:4, y:0});
-    testLocation = xmasRush.getRelativeLocation('DOWN', {x:3, y:0});
-    expect(testLocation).toEqual({x:4, y:0});
+    testLocation = xmasRush.getRelativeLocation('DOWN', {
+      x: 0,
+      y: 0});
+    expect(testLocation).toEqual({
+      x: 1,
+      y: 0});
+    testLocation = xmasRush.getRelativeLocation('DOWN', {
+      x: 3,
+      y: 0});
+    expect(testLocation).toEqual({
+      x: 4,
+      y: 0});
+    testLocation = xmasRush.getRelativeLocation('DOWN', {
+      x: 3,
+      y: 0});
+    expect(testLocation).toEqual({
+      x: 4,
+      y: 0});
 
     // test boundries
     testLocation = xmasRush.getRelativeLocation('DOWN', {
       x: maxTileCol,
       y: maxTileRow,
     });
-    expect(testLocation).toEqual({});
+    expect(testLocation).toEqual(false);
 
     testLocation = xmasRush.getRelativeLocation('RIGHT', {
       x: maxTileCol,
       y: maxTileRow,
     });
-    expect(testLocation).toEqual({});
+    expect(testLocation).toEqual(false);
 
 
-    testLocation = xmasRush.getRelativeLocation('UP', {x:0, y:0});
-    expect(testLocation).toEqual({});
+    testLocation = xmasRush.getRelativeLocation('UP', {
+      x: 0,
+      y: 0
+    });
+    expect(testLocation).toEqual(false);
 
-    testLocation = xmasRush.getRelativeLocation('LEFT', {x:0, y:0});
-    expect(testLocation).toEqual({});
-
-
-  })
+    testLocation = xmasRush.getRelativeLocation('LEFT', {
+      x: 0,
+      y: 0
+    });
+    expect(testLocation).toEqual(false);
+  });
 
   it('should get open neighbors', () => {
     let openNeighbors = xmasRush.getOpenNeighbors(xmasRush.tiles[0][0],

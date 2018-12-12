@@ -77,12 +77,20 @@ class XmasRush {
   }
 
   getTile(location) {
-    return this.tiles[location.x][location.y];
+    if (this.tiles[location.x] && this.tiles[location.x][location.y]) {
+      return this.tiles[location.x][location.y];
+    }
+
+    return false;
   }
 
   getOpenNeighbors(tile, location) {
     return Object.keys(tile.exits).reduce((acc, directionKey) => {
       let neighborLocation = this.getRelativeLocation(directionKey, location);
+      if (!neighborLocation) {
+        return acc;
+      }
+      console.log({tile: this.getTile(neighborLocation), neighborLocation});
       let neighborExits = this.getTile(neighborLocation).exits;
       let reversedDirections = {
         UP: 'DOWN',
@@ -114,10 +122,10 @@ class XmasRush {
       return newLocation;
     }
 
-    return {};
+    return false;
   }
 
-  getPath(locationStart, locationEnd) {
+  getPath(locationStart, locationEnd, depth = 0, maxDepth = 10) {
     let start = {
       x: locationStart.x,
       y: locationStart.y};
@@ -126,20 +134,64 @@ class XmasRush {
       y: locationEnd.y};
     let currentTile = this.tiles[start.x][start.y];
     let lastTile = this.tiles[end.x][end.y];
-    let path = Object.keys(currentTile.exits).map((exitKey) => {
-      // Each exit from this square has a score, the score
-      // is the optimal distance to the goal from this square.
-      let exit = currentTile.exits[exitKey];
-      let neighbor = this.getRelativeLocation();
-    }).reduce((bestProbe, exitProbe) => {
-      if (!bestProbe) {
-        return exitProbe;
-      }
+    console.log({currentTile, start});
+    const searchLoop = (currentLocation, targetLocation, moves = []) => {
+      let openNeighbors = this.getOpenNeighbors(this.getTile(currentLocation),
+          start);
+      let openNeighborsKeys = Object.keys(openNeighbors);
+      return openNeighborsKeys.map((openNeighborDirectionKey) => {
+        // Each exit from this square has a score, the score
+        // is the optimal distance to the goal from this square.
+        let neighborCoords = this.getRelativeLocation(openNeighborDirectionKey,
+            currentLocation);
+        let lastDirection = openNeighborDirectionKey;
+        let neighborTile = this.getTile(neighborCoords);
+        if (!neighborTile) {
+          moves.push('movedOffMap');
 
-      if (bestProbe.score < exitProbe.score) {
-        return exitProbe;
-      }
-    })
+          return moves;
+        }
+        let neighborExits = Object.keys(neighborTile.exits);
+        console.log({openNeighborDirectionKey, neighborCoords, neighborExits});
+        return neighborExits.map((exit) => {
+          moves.push({exit, ...neighborCoords});
+          console.log({movesl:moves.length, maxDepth, moves: JSON.stringify(moves)});
+          if (moves.length > maxDepth) {
+            moves.push('maxDepthReached');
+
+            return moves;
+          }
+          if (neighborCoords === targetLocation) {
+            return moves;
+          }
+          let reversedDirections = {
+            UP: 'DOWN',
+            RIGHT: 'LEFT',
+            DOWN: 'UP',
+            LEFT: 'RIGHT',
+          }
+          console.log({lastDirection});
+          if (exit !== reversedDirections[lastDirection]) {
+            lastDirection = exit;
+            searchLoop(neighborCoords, targetLocation, moves);
+          }
+        });
+        console.log({neighborCoords});
+        return neighborCoords
+
+      });
+    }
+
+    let path = searchLoop(locationStart, locationEnd);
+    // .reduce((bestProbe, exitProbe) => {
+//       if (!bestProbe) {
+//         return exitProbe;
+//       }
+//
+//       if (bestProbe.score < exitProbe.score) {
+//         return exitProbe;
+//       }
+//     })
     this.printErr({path});
     return path;
   }
