@@ -2,6 +2,17 @@
  * Help the Christmas elves fetch presents in a magical labyrinth!
  **/
 
+let readline_;
+if (typeof readline === 'undefined') {
+  lines = require('./lines.js');
+  readline_ = function() {
+    return lines;
+  }
+} else {
+  readline_ = readline;
+}
+
+
 debugReadline_ = () => {
   let results = readline();
   console.log(JSON.stringify(results));
