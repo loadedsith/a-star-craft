@@ -4,6 +4,8 @@ class Tile {
   constructor(tile) {
     Object.assign(this, {tile});
     this.exits = Tile.getExits(tile);
+    this.score = 0;
+    this.goalFound = false;
   }
 
   static getExits(tile) {

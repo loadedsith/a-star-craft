@@ -5,8 +5,9 @@ const DIRECTIONS = require('./directions.js');
 
 /** Challenge class. */
 class XmasRush {
-  constructor(readline_, printErr_) {
+  constructor(readline_, printErr_, options = {}) {
     Object.assign(this, {
+      errors: [],
       items: [],
       players: [],
       printErr: printErr_,
@@ -14,7 +15,8 @@ class XmasRush {
       readline: readline_,
       tiles: [[]],
       turnType: null,
-    });
+    },
+    options);
   }
 
   readTurn() {
@@ -80,18 +82,16 @@ class XmasRush {
     if (this.tiles[location.x] && this.tiles[location.x][location.y]) {
       return this.tiles[location.x][location.y];
     }
-
     return false;
   }
 
-  getOpenNeighbors(tile, location) {
+  getOpenExits(tile, location) {
     return Object.keys(tile.exits).reduce((acc, directionKey) => {
       let neighborLocation = this.getRelativeLocation(directionKey, location);
       if (!neighborLocation) {
         return acc;
       }
-      console.log({tile: this.getTile(neighborLocation), neighborLocation});
-      let neighborExits = this.getTile(neighborLocation).exits;
+      let neighborExits = this.getTile(neighborLocation).exits || {};
       let reversedDirections = {
         UP: 'DOWN',
         RIGHT: 'LEFT',
@@ -125,64 +125,90 @@ class XmasRush {
     return false;
   }
 
-  getPath(locationStart, locationEnd, depth = 0, maxDepth = 10) {
-    let start = {
-      x: locationStart.x,
-      y: locationStart.y};
-    let end = {
-      x: locationEnd.x,
-      y: locationEnd.y};
+  getPath(start, end, depth = 0, maxDepth = 10) {
     let currentTile = this.tiles[start.x][start.y];
     let lastTile = this.tiles[end.x][end.y];
-    console.log({currentTile, start});
-    const searchLoop = (currentLocation, targetLocation, moves = []) => {
-      let openNeighbors = this.getOpenNeighbors(this.getTile(currentLocation),
+    let matchCount = 0;
+    let pathsFound = [];
+    const getPathScores = (currentLocation, targetLocation, xmasRush = 'new', score = 0, path = [[]], stepCount = 0) => {
+      if (xmasRush === 'new') {
+        xmasRush = new XmasRush(this.readline_,this.printErr_, {
+            tiles: this.tiles,
+        })
+      }
+
+      path = JSON.parse(JSON.stringify(path))
+      stepCount += 1;
+
+      let openExits = xmasRush.getOpenExits(xmasRush.getTile(currentLocation),
           start);
-      let openNeighborsKeys = Object.keys(openNeighbors);
-      return openNeighborsKeys.map((openNeighborDirectionKey) => {
-        // Each exit from this square has a score, the score
-        // is the optimal distance to the goal from this square.
-        let neighborCoords = this.getRelativeLocation(openNeighborDirectionKey,
-            currentLocation);
-        let lastDirection = openNeighborDirectionKey;
-        let neighborTile = this.getTile(neighborCoords);
-        if (!neighborTile) {
-          moves.push('movedOffMap');
+      let openExitsKeys = Object.keys(openExits);
 
-          return moves;
-        }
-        let neighborExits = Object.keys(neighborTile.exits);
-        console.log({openNeighborDirectionKey, neighborCoords, neighborExits});
-        return neighborExits.map((exit) => {
-          moves.push({exit, ...neighborCoords});
-          console.log({movesl:moves.length, maxDepth, moves: JSON.stringify(moves)});
-          if (moves.length > maxDepth) {
-            moves.push('maxDepthReached');
+      if (typeof path[currentLocation.x] === 'undefined') {
+        path[currentLocation.x] = [];
+      }
+      path[currentLocation.x][currentLocation.y] = {
+          index: stepCount,
+          score: matchCount,
+      };
 
-            return moves;
-          }
-          if (neighborCoords === targetLocation) {
-            return moves;
-          }
-          let reversedDirections = {
-            UP: 'DOWN',
-            RIGHT: 'LEFT',
-            DOWN: 'UP',
-            LEFT: 'RIGHT',
-          }
-          console.log({lastDirection});
-          if (exit !== reversedDirections[lastDirection]) {
-            lastDirection = exit;
-            searchLoop(neighborCoords, targetLocation, moves);
+      if (currentLocation.x === targetLocation.x &&
+          currentLocation.y === targetLocation.y) {
+        matchCount++;
+        path[currentLocation.x][currentLocation.y].goalFound =
+            matchCount;
+        pathsFound.push(JSON.parse(JSON.stringify(path)));
+      } else {
+        score++;
+
+        openExitsKeys.map((exitKey) => {
+          let exitLocation = xmasRush.getRelativeLocation(DIRECTIONS[exitKey],
+              currentLocation);
+          if (exitLocation) {
+            getPathScores(exitLocation, targetLocation, xmasRush, score, path, stepCount);
           }
         });
-        console.log({neighborCoords});
-        return neighborCoords
-
-      });
+      }
     }
 
-    let path = searchLoop(locationStart, locationEnd);
+    getPathScores(start, end);
+    if (pathsFound) {
+
+      for (var i = 0; i < pathsFound.length; i++) {
+        let path = pathsFound[i];
+
+        console.log('\nPATH---');
+        for (var j = 0; j < 7; j++) {
+          let pathsFoundRow = path[j];
+
+          let line = '';
+          for (var k = 0; k < 7; k++) {
+
+            let pathsFoundTile = (pathsFoundRow||[])[k];
+
+            if (pathsFoundTile) {
+              // console.log({pathsFoundTile:pathsFoundTile});
+              line += `${pathsFoundTile.index}`;
+            } else {
+              line += `_`;
+            }
+          }
+          console.log('-'+line);
+        }
+      }
+      // pathsFound.map((path) => {
+      //   path.map((pathsRow, x) => {
+      //     let line = ''
+      //     pathsRow.map((pathTile, y) => {
+      //       line += '  ' + (pathTile.stepCount||'_') + (pathTile.goalFound === false ? `_${pathTile.score} `:`-${pathTile.goalFound}-`);
+      //     });
+      //     console.log(line)
+      //   });
+        console.log('----')
+      // })
+    } else {
+      console.log('No score tiles');
+    }
     // .reduce((bestProbe, exitProbe) => {
 //       if (!bestProbe) {
 //         return exitProbe;
@@ -192,8 +218,10 @@ class XmasRush {
 //         return exitProbe;
 //       }
 //     })
-    this.printErr({path});
-    return path;
+    // this is palaceholder for when the path can be calculated from the scored
+    // tiles
+    let path = pathsFound[0];
+    return path||[];
   }
 }
 

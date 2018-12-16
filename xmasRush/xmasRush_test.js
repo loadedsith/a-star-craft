@@ -57,14 +57,15 @@ describe('Xmas Rush, level one, basics', () => {
     });
   });
 
-  it('should a path between 2 items', () => {
+  it('should a path between 0,0 and 1,1 ', () => {
     let start = {
       x: 0,
       y: 0};
     let end = {
       x: 1,
       y: 1};
-    let path = xmasRush.getPath(start, end);
+    // let path = xmasRush.getPath(start, end);
+    let path = xmasRush.getPath(start, {x: 3, y: 4});
 
     expect(path).toBe([{
       x: 1,
@@ -124,7 +125,7 @@ describe('Xmas Rush, level one, basics', () => {
   });
 
   it('should get open neighbors', () => {
-    let openNeighbors = xmasRush.getOpenNeighbors(xmasRush.tiles[0][0],
+    let openNeighbors = xmasRush.getOpenExits(xmasRush.tiles[0][0],
         {
           x: 0,
           y: 0,
@@ -133,7 +134,7 @@ describe('Xmas Rush, level one, basics', () => {
       'RIGHT': true,
       'DOWN': true,
     });
-    openNeighbors = xmasRush.getOpenNeighbors(xmasRush.tiles[3][3],
+    openNeighbors = xmasRush.getOpenExits(xmasRush.tiles[3][3],
         {
           x: 3,
           y: 3,
@@ -142,7 +143,7 @@ describe('Xmas Rush, level one, basics', () => {
       'LEFT': true,
       'RIGHT': true,
     });
-    openNeighbors = xmasRush.getOpenNeighbors(xmasRush.tiles[6][6],
+    openNeighbors = xmasRush.getOpenExits(xmasRush.tiles[6][6],
         {
           x: 6,
           y: 6,
