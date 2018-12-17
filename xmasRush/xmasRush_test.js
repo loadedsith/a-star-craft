@@ -59,25 +59,11 @@ describe('Xmas Rush, level one, basics', () => {
 
   it('should a path between 0,0 and 1,1 ', () => {
     let path = xmasRush.getPath({x: 0, y: 0}, {x: 1, y: 1});
-    console.log(JSON.stringify(path));
     expect(path).toEqual([
-      {
-        "index":1,
-        "matchCount":0,
-        "x":0,
-        "y":0,
-      }, {
-        "index":2,
-        "matchCount":0,
-        "x":1,
-        "y":0,
-      }, {
-        "index":3,
-        "matchCount":0,
-        "x":1,
-        "y":1,
-        "goalFound":1,
-      }]);
+      {"index":1, "matchCount":0, "x":0, "y":0},
+      {"index":2, "matchCount":0, "x":1, "y":0},
+      {"index":3, "matchCount":0, "x":1, "y":1, "goalFound":1}
+    ]);
 
     path = xmasRush.getPath({x: 0, y: 0}, {x: 3, y: 4});
     expect(path).toEqual([
