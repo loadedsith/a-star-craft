@@ -55,6 +55,7 @@ class XmasRush {
         playerTile: inputs[3],
         playerX: parseInt(inputs[1]),
         playerY: parseInt(inputs[2]),
+        playerId: i,
       });
     }
 
@@ -163,15 +164,10 @@ class XmasRush {
       x: currentLocation.x,
       y: currentLocation.y,
     });
-    this.printErr(JSON.stringify({
-      openExits,
-      targetLocation, currentLocation
-    }))
 
     if (currentLocation.x === targetLocation.x &&
         currentLocation.y === targetLocation.y) {
-      this.printErr('FOUND ONE')
-      matchCount++;
+          matchCount++;
       path[path.length - 1].goalFound = matchCount;
       pathsFound.push(JSON.parse(JSON.stringify(path)));
     } else {
@@ -196,12 +192,10 @@ class XmasRush {
 
   getPath(start, end, depth = 0, maxDepth = 20) {
     let currentTile = this.tiles[start.y][start.x];
-    this.printErr(JSON.stringify({start}));
     // this.printErr(JSON.stringify({startX:start.x, endX:end.x}));
     if (!(this.tiles[end.y] &&  this.tiles[end.y][end.x])) {
       return
     }
-    this.printErr(JSON.stringify({end}));
 
     let lastTile = this.tiles[end.y][end.x];
     let matchCount = 0;
@@ -209,30 +203,29 @@ class XmasRush {
 
     this.getPathScores(start, end, pathsFound);
     // Print paths with the following debug code
-    if (pathsFound.length > 0) {
-      for (var i = 0; i < pathsFound.length; i++) {
-        let path = pathsFound[i];
-        this.printErr('\nPATH\n');
-        for (var j = 0; j < 7; j++) {
-          let line = '';
-          for (var k = 0; k < 7; k++) {
-
-            let pathsFoundTile = XmasRush.getStepAtLocation(path, {x: k, y: j});
-
-            if (pathsFoundTile) {
-              line += `${pathsFoundTile.index}`;
-            } else {
-              line += `_`;
-            }
-          }
-          this.printErr('-'+line);
-        }
-      }
-      this.printErr('----\n')
-    } else {
-      this.printErr('No score tiles');
-    }
-    this.printErr(JSON.stringify({pathsFound}));
+    // if (pathsFound.length > 0) {
+    //   for (var i = 0; i < pathsFound.length; i++) {
+    //     let path = pathsFound[i];
+    //     this.printErr('\nPATH\n');
+    //     for (var j = 0; j < 7; j++) {
+    //       let line = '';
+    //       for (var k = 0; k < 7; k++) {
+    //
+    //         let pathsFoundTile = XmasRush.getStepAtLocation(path, {x: k, y: j});
+    //
+    //         if (pathsFoundTile) {
+    //           line += `${pathsFoundTile.index}`;
+    //         } else {
+    //           line += `_`;
+    //         }
+    //       }
+    //       this.printErr('-'+line);
+    //     }
+    //   }
+      // this.printErr('----\n')
+    // } else {
+      // this.printErr('No score tiles');
+    // }
 
     let path = pathsFound.reduce((bestPath, currentPath) => {
       if (bestPath == null) {

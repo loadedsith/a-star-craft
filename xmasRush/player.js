@@ -6,11 +6,13 @@ class Player {
     playerTile,
     playerX,
     playerY,
+    playerId,
   }, map) {
     Object.assign(this, {
       numCards: numPlayerCards,
       x: playerX,
       y: playerY,
+      playerId: playerId,
     });
   }
 }
