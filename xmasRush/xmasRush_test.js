@@ -58,18 +58,65 @@ describe('Xmas Rush, level one, basics', () => {
   });
 
   it('should a path between 0,0 and 1,1 ', () => {
-    let start = {
-      x: 0,
-      y: 0};
-    let end = {
-      x: 1,
-      y: 1};
-    // let path = xmasRush.getPath(start, end);
-    let path = xmasRush.getPath(start, {x: 3, y: 4});
+    let path = xmasRush.getPath({x: 0, y: 0}, {x: 1, y: 1});
+    console.log(JSON.stringify(path));
+    expect(path).toEqual([
+      {
+        "index":1,
+        "matchCount":0,
+        "x":0,
+        "y":0,
+      }, {
+        "index":2,
+        "matchCount":0,
+        "x":1,
+        "y":0,
+      }, {
+        "index":3,
+        "matchCount":0,
+        "x":1,
+        "y":1,
+        "goalFound":1,
+      }]);
 
-    expect(path).toBe([{
-      x: 1,
-      y: 1}]);
+    path = xmasRush.getPath({x: 0, y: 0}, {x: 3, y: 4});
+    expect(path).toEqual([
+      { index: 1, matchCount: 0, x: 0, y: 0 },
+      { index: 2, matchCount: 0, x: 1, y: 0 },
+      { index: 3, matchCount: 0, x: 1, y: 1 },
+      { index: 4, matchCount: 0, x: 2, y: 1 },
+      { index: 5, matchCount: 0, x: 2, y: 2 },
+      { index: 6, matchCount: 0, x: 3, y: 2 },
+      { index: 7, matchCount: 0, x: 3, y: 3 },
+      { index: 8, matchCount: 0, x: 3, y: 4, goalFound: 1 },
+    ]);
+
+    path = xmasRush.getPath({x: 3, y: 0}, {x: 3, y: 4});
+    expect(path).toEqual([
+      { index: 1, matchCount: 0, x: 3, y: 0 },
+      { index: 2, matchCount: 0, x: 2, y: 0 },
+      { index: 3, matchCount: 0, x: 2, y: 1 },
+      { index: 4, matchCount: 0, x: 2, y: 2 },
+      { index: 5, matchCount: 0, x: 3, y: 2 },
+      { index: 6, matchCount: 0, x: 3, y: 3 },
+      { index: 7, matchCount: 0, x: 3, y: 4, goalFound: 1 }
+    ]);
+
+    path = xmasRush.getPath({x: 5, y: 1}, {x: 3, y: 4});
+    expect(path).toEqual(null);
+
+    path = xmasRush.getPath({x: 0, y: 5}, {x: 3, y: 4});
+    expect(path).toEqual(null);
+
+    path = xmasRush.getPath({x: 6, y: 6}, {x: 3, y: 4});
+    expect(path).toEqual([
+      { index: 1, matchCount: 0, x: 6, y: 6 },
+      { index: 2, matchCount: 0, x: 5, y: 6 },
+      { index: 3, matchCount: 0, x: 5, y: 5 },
+      { index: 4, matchCount: 0, x: 4, y: 5 },
+      { index: 5, matchCount: 0, x: 4, y: 4 },
+      { index: 6, matchCount: 0, x: 3, y: 4, goalFound: 1 },
+    ]);
   });
 
   it('should get neighbors', () => {
@@ -125,33 +172,29 @@ describe('Xmas Rush, level one, basics', () => {
   });
 
   it('should get open neighbors', () => {
-    let openNeighbors = xmasRush.getOpenExits(xmasRush.tiles[0][0],
-        {
-          x: 0,
-          y: 0,
-        });
+    let openNeighbors = xmasRush.getOpenExits(xmasRush.tiles[0][0], {
+      x: 0,
+      y: 0,
+    });
     expect(openNeighbors).toEqual({
       'RIGHT': true,
       'DOWN': true,
     });
-    openNeighbors = xmasRush.getOpenExits(xmasRush.tiles[3][3],
-        {
-          x: 3,
-          y: 3,
-        });
+    openNeighbors = xmasRush.getOpenExits(xmasRush.tiles[3][3], {
+      x: 3,
+      y: 3,
+    });
     expect(openNeighbors).toEqual({
       'LEFT': true,
       'RIGHT': true,
     });
-    openNeighbors = xmasRush.getOpenExits(xmasRush.tiles[6][6],
-        {
-          x: 6,
-          y: 6,
-        });
+    openNeighbors = xmasRush.getOpenExits(xmasRush.tiles[6][6], {
+      x: 6,
+      y: 6,
+    });
     expect(openNeighbors).toEqual({
       'UP': true,
       'LEFT': true,
     });
   });
-
 });
