@@ -12,14 +12,20 @@ class Tile {
     if (!tile) {
       return {};
     }
-
-    return Object.keys(DIRECTIONS).reduce((acc, direction, index) => {
-      if (tile[index] === '1') {
-        acc[direction] = true;
-      }
-
-      return acc;
-    }, {});
+    let exits = {}
+    if (tile[0] === '1') {
+      exits['UP'] = true;
+    }
+    if (tile[1] === '1') {
+      exits['RIGHT'] = true;
+    }
+    if (tile[2] === '1') {
+      exits['DOWN'] = true;
+    }
+    if (tile[3] === '1') {
+      exits['LEFT'] = true;
+    }
+    return exits;
   }
 }
 

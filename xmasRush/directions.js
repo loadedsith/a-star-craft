@@ -1,15 +1,15 @@
 let DIRECTIONS = {
   UP: {
-    x: -1,
+    y: -1,
   },
   RIGHT: {
-    y: 1,
-  },
-  DOWN: {
     x: 1,
   },
+  DOWN: {
+    y: 1,
+  },
   LEFT: {
-    y: -1
+    x: -1
   },
 };
 

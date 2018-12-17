@@ -9,7 +9,6 @@ class Player {
   }, map) {
     Object.assign(this, {
       numCards: numPlayerCards,
-      tile: new Tile(playerTile||'emptyTile'),
       x: playerX,
       y: playerY,
     });

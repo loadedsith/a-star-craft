@@ -38,6 +38,7 @@ class XmasRush {
     });
 
     this.turnType = parseInt(this.readline());
+    this.printErr('turntype ' + this.turnType);
     for (let i = 0; i < 7; i++) {
       const inputs = this.readline().split(' ');
       this.tiles[i] = [];
@@ -68,6 +69,7 @@ class XmasRush {
       }));
     }
 
+
     // The total number of revealed quests for both players.
     const numQuests = parseInt(this.readline());
     for (let i = 0; i < numQuests; i++) {
@@ -88,8 +90,8 @@ class XmasRush {
   }
 
   getTile(location) {
-    if (this.tiles[location.x] && this.tiles[location.x][location.y]) {
-      return this.tiles[location.x][location.y];
+    if (this.tiles[location.y] && this.tiles[location.y][location.x]) {
+      return this.tiles[location.y][location.x];
     }
     return false;
   }
@@ -139,7 +141,7 @@ class XmasRush {
       lastDirection = false) {
 
     if (xmasRush === 'new') {
-      xmasRush = new XmasRush(this.readline_,this.printErr_, {
+      xmasRush = new XmasRush(this.readline,this.printErr, {
           tiles: this.tiles,
       })
     }
@@ -151,17 +153,24 @@ class XmasRush {
     }
     let openExits = xmasRush.getOpenExits(xmasRush.getTile(currentLocation),
         currentLocation);
+
     let openExitsKeys = Object.keys(openExits);
 
     path.push({
       index,
       matchCount,
+      direction: lastDirection,
       x: currentLocation.x,
       y: currentLocation.y,
     });
+    this.printErr(JSON.stringify({
+      openExits,
+      targetLocation, currentLocation
+    }))
 
     if (currentLocation.x === targetLocation.x &&
         currentLocation.y === targetLocation.y) {
+      this.printErr('FOUND ONE')
       matchCount++;
       path[path.length - 1].goalFound = matchCount;
       pathsFound.push(JSON.parse(JSON.stringify(path)));
@@ -185,38 +194,46 @@ class XmasRush {
     })
   }
 
-  getPath(start, end, depth = 0, maxDepth = 10) {
-    let currentTile = this.tiles[start.x][start.y];
-    let lastTile = this.tiles[end.x][end.y];
+  getPath(start, end, depth = 0, maxDepth = 20) {
+    let currentTile = this.tiles[start.y][start.x];
+    this.printErr(JSON.stringify({start}));
+    // this.printErr(JSON.stringify({startX:start.x, endX:end.x}));
+    if (!(this.tiles[end.y] &&  this.tiles[end.y][end.x])) {
+      return
+    }
+    this.printErr(JSON.stringify({end}));
+
+    let lastTile = this.tiles[end.y][end.x];
     let matchCount = 0;
     let pathsFound = [];
 
     this.getPathScores(start, end, pathsFound);
     // Print paths with the following debug code
-    // if (pathsFound.length > 0) {
-    //   for (var i = 0; i < pathsFound.length; i++) {
-    //     let path = pathsFound[i];
-    //     console.log('\nPATH\n');
-    //     for (var j = 0; j < 7; j++) {
-    //       let line = '';
-    //       for (var k = 0; k < 7; k++) {
-    //
-    //         let pathsFoundTile = XmasRush.getStepAtLocation(path, {x: j, y: k});
-    //
-    //         if (pathsFoundTile) {
-    //           line += `${pathsFoundTile.index}`;
-    //         } else {
-    //           line += `_`;
-    //         }
-    //       }
-    //       console.log('-'+line);
-    //     }
-    //   }
-    //   console.log('----\n')
-    // } else {
-    //   console.log('No score tiles');
-    // }
-    // console.log({pathsFound:JSON.stringify(pathsFound)});
+    if (pathsFound.length > 0) {
+      for (var i = 0; i < pathsFound.length; i++) {
+        let path = pathsFound[i];
+        this.printErr('\nPATH\n');
+        for (var j = 0; j < 7; j++) {
+          let line = '';
+          for (var k = 0; k < 7; k++) {
+
+            let pathsFoundTile = XmasRush.getStepAtLocation(path, {x: k, y: j});
+
+            if (pathsFoundTile) {
+              line += `${pathsFoundTile.index}`;
+            } else {
+              line += `_`;
+            }
+          }
+          this.printErr('-'+line);
+        }
+      }
+      this.printErr('----\n')
+    } else {
+      this.printErr('No score tiles');
+    }
+    this.printErr(JSON.stringify({pathsFound}));
+
     let path = pathsFound.reduce((bestPath, currentPath) => {
       if (bestPath == null) {
         return currentPath;
