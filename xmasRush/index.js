@@ -24,31 +24,52 @@ const debugReadline_ = () => {
 
 const DIRECTIONS = require('./directions.js');
 const XmasRush = require('./xmasRush.js');
-const Player = require('./player.js');
 const Tile = require('./tile.js');
 const xmasRush = new XmasRush(readline, printErr);
 const difference = function (a, b) { return Math.abs(a - b); }
+const difference2d = function(start, end) {
+  var a = start.x - end.x;
+  var b = start.y - end.y;
 
+  return Math.sqrt( a*a + b*b );
+}
 // game loop
 while (true) {
   let move = '';
   xmasRush.readTurn();
 
-  let tiles = xmasRush.tiles.map((tileRow) => {
-    return tileRow.map((tile) => {
-      return new Tile(tile);
-    })
-  });
   let player = xmasRush.players.find((player)=>{
     return player.playerId === 0;
   });
-
-  let quest = xmasRush.getPlayerQuests(0)[0];
-  let item = xmasRush.getPlayerItems(0).find((item) => {
+  let closestQuest = xmasRush.getPlayerQuests(0).map((quest) => {
+    let closestItem = xmasRush.getPlayerItems(0).find((item) => {
       return item.name === quest.questItemName;
     });
+    return xmasRush.getPath(player, closestItem);
+  }).sort((a, b) => {
+    printErr('a:'+a)
+    return (a||[]).length - (b||[]).length;
+  })[0];
+  if (closestQuest == null) {
+    let closestQuest = xmasRush.getPlayerQuests(0).map((quest) => {
+      let closestItem = xmasRush.getPlayerItems(0).find((item) => {
+        return item.name === quest.questItemName;
+      });
+      closestItem.distance = difference2d(closestItem, player);
+      return closestItem
+    }).sort((a, b) => {
+      printErr('a:'+a)
+      return a.distance - b.distance;
+    })[0]
+  }
+
+  let quest = closestQuest||xmasRush.getPlayerQuests(0)[0];
+  let item = xmasRush.getPlayerItems(0).find((item) => {
+    return item.name === quest.questItemName;
+  });
   printErr(JSON.stringify({item}))
   printErr(JSON.stringify({quest}))
+
   let path = [];
   if (xmasRush.turnType === 1) {
     move = 'PASS';
@@ -58,49 +79,40 @@ while (true) {
       move = `MOVE ${exitKeys[Math.round(exitKeys.length - 1)]}`;
     }
 
-    // if (Object.keys(exits).length > 0) {
-
-      path = xmasRush.getPath(player, item);
-      if (path && path[1]) {
-        let firstStep = path[1];
-        if (firstStep && firstStep.direction) {
-          move = `MOVE ${firstStep.direction}`
+    path = xmasRush.getPath(player, item);
+    if (path && path[1]) {
+      move = 'MOVE';
+      for (var i = 1; i < path.length; i++) {
+        move += ` ${path[i].direction}`;
+      }
+      printErr('move:'+move);
+    } else {
+      // random exit
+      let exitsKeys = Object.keys(exits);
+      if (exitsKeys.length > 0) {
+        let goodDirections = [];
+        if (item.x < player.x) {
+          goodDirections.push('LEFT');
+        } else if (item.x > player.x) {
+          goodDirections.push('RIGHT');
         }
-      } else {
-        // random exit
-        let exitsKeys = Object.keys(exits);
-        if (exitsKeys.length > 0) {
-          let goodDirections = []
-          if (item.x < player.x) {
-            goodDirections.push('LEFT');
-          } else if (item.x > player.x) {
-            goodDirections.push('RIGHT');
-          }
-          if (item.y < player.y) {
-            goodDirections.push('UP');
-          } else if (item.y > player.y) {
-            goodDirections.push('DOWN');
-          }
-          let direction = goodDirections.find((goodDirection) => {
-            return exitsKeys.indexOf(goodDirection) > -1
-          });
-          if (direction) {
-            move = `MOVE ${direction}`
-          } else {
-            // move = `MOVE ${exitsKeys[Math.floor(
-            //     Math.random() * exitsKeys.length)]}`
-          }
+        if (item.y < player.y) {
+          goodDirections.push('UP');
+        } else if (item.y > player.y) {
+          goodDirections.push('DOWN');
+        }
+        let direction = goodDirections.find((goodDirection) => {
+          return exitsKeys.indexOf(goodDirection) > -1;
+        });
+        if (direction) {
+          move = `MOVE ${direction}`;
         }
       }
-    // }
+    }
   } else {
-    let directions = DIRECTIONS;
-    let directionsKeys = Object.keys(directions);
-    // let player = xmasRush.players[0];
-
     let goodDirections = [];
     let rowOrColumn = 0;
-    let weighting = [1, 0, 0, 0 -1];
+    let weighting = [1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
     let tigerToe = weighting[Math.floor(Math.random() * weighting.length)];
     if (difference(item.x, player.x) > difference(item.y, player.y)) {
       if (item.x < player.x) {
@@ -108,35 +120,32 @@ while (true) {
       } else if (item.x > player.x) {
         goodDirections.push(['LEFT', item.y]);
       } else {
-        goodDirections.push(['RIGHT', item.y + tigerToe]);
+        goodDirections.push(['RIGHT', item.y]);
       }
     } else {
       if (item.y < player.y) {
-        goodDirections.push(['UP', player.x]);
+        goodDirections.push(['DOWN', item.x]);
       } else if (item.y > player.y) {
-        goodDirections.push(['DOWN', player.x]);
+        goodDirections.push(['UP', item.x]);
       } else {
-        goodDirections.push(['UP', player.x + tigerToe]);
+        goodDirections.push(['UP', item.x]);
       }
     }
     let randomPair = goodDirections[Math.floor(Math.random() *
-        goodDirections.length)]
+        goodDirections.length)];
     let direction = randomPair[0];
-    rowOrColumn = Math.max(0, Math.min(6, randomPair[1]));
+    rowOrColumn = Math.max(0, Math.min(6, randomPair[1] + tigerToe));
 
     if (path.length > 0) {
-      rowOrColumn = 0;
+      direction = 'RIGHT';
+      let otherPlayer = xmasRush.players.find((player)=>{
+        return player.playerId === 1;
+      }).x;
+      rowOrColumn = otherPlayer.x;
+
     }
     move = `PUSH ${rowOrColumn} ${direction}`;
   }
-
-  // let turn = debugReadline_();
-  // console.log(JSON.stringify({xmasRush}, null, 2));
-  // console.log(JSON.stringify({players}, null, 2));
-  // console.log(JSON.stringify({tiles: tiles[1][1]}, null, 2));
-
-  // Write an action using print()
-  // To debug: printErr('Debug messages...');
 
   print(move); // PUSH <id> <direction> | MOVE <direction> | PASS
 }
