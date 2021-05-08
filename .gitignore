@@ -1,1 +1,6 @@
 bundle.js
+node_modules
+
+# eclipse
+.project
+.settings
