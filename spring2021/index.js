@@ -1,63 +1,3 @@
-/*
- Game {
-  day: 20,
-  nutrients: 18,
-  cells: [
-    Cell { index: 0, richness: 3, neighbors: [Array] },
-    Cell { index: 1, richness: 3, neighbors: [Array] },
-    Cell { index: 2, richness: 3, neighbors: [Array] },
-    Cell { index: 3, richness: 3, neighbors: [Array] },
-    Cell { index: 4, richness: 3, neighbors: [Array] },
-    Cell { index: 5, richness: 3, neighbors: [Array] },
-    Cell { index: 6, richness: 3, neighbors: [Array] },
-    Cell { index: 7, richness: 2, neighbors: [Array] },
-    Cell { index: 8, richness: 2, neighbors: [Array] },
-    Cell { index: 9, richness: 2, neighbors: [Array] },
-    Cell { index: 10, richness: 2, neighbors: [Array] },
-    Cell { index: 11, richness: 2, neighbors: [Array] },
-    Cell { index: 12, richness: 2, neighbors: [Array] },
-    Cell { index: 13, richness: 2, neighbors: [Array] },
-    Cell { index: 14, richness: 2, neighbors: [Array] },
-    Cell { index: 15, richness: 2, neighbors: [Array] },
-    Cell { index: 16, richness: 2, neighbors: [Array] },
-    Cell { index: 17, richness: 2, neighbors: [Array] },
-    Cell { index: 18, richness: 2, neighbors: [Array] },
-    Cell { index: 19, richness: 1, neighbors: [Array] },
-    Cell { index: 20, richness: 1, neighbors: [Array] },
-    Cell { index: 21, richness: 1, neighbors: [Array] },
-    Cell { index: 22, richness: 1, neighbors: [Array] },
-    Cell { index: 23, richness: 1, neighbors: [Array] },
-    Cell { index: 24, richness: 1, neighbors: [Array] },
-    Cell { index: 25, richness: 1, neighbors: [Array] },
-    Cell { index: 26, richness: 1, neighbors: [Array] },
-    Cell { index: 27, richness: 1, neighbors: [Array] },
-    Cell { index: 28, richness: 1, neighbors: [Array] },
-    Cell { index: 29, richness: 1, neighbors: [Array] },
-    Cell { index: 30, richness: 1, neighbors: [Array] },
-    Cell { index: 31, richness: 1, neighbors: [Array] },
-    Cell { index: 32, richness: 1, neighbors: [Array] },
-    Cell { index: 33, richness: 1, neighbors: [Array] },
-    Cell { index: 34, richness: 1, neighbors: [Array] },
-    Cell { index: 35, richness: 1, neighbors: [Array] },
-    Cell { index: 36, richness: 1, neighbors: [Array] }
-  ],
-  possibleActions: [
-    Action { type: '6', targetCellIdx: 3, sourceCellIdx: undefined },
-    Action { type: '7', targetCellIdx: 3, sourceCellIdx: undefined },
-    Action { type: '8', targetCellIdx: 3, sourceCellIdx: undefined },
-    Action { type: '10', targetCellIdx: 3, sourceCellIdx: undefined }
-  ],
-  trees: [ Tree { cellIndex: 3, size: 3, isMine: false, isDormant: false } ],
-  mySun: 18,
-  myScore: 0,
-  opponentsSun: 0,
-  opponentScore: NaN,
-  opponentIsWaiting: true,
-  opponentSun: 12
-}
- */
-
-
 let readline_;
 let line_ = 0;
 let turn_ = 0;
@@ -142,18 +82,51 @@ class Game {
     this.opponentsSun = 0
     this.opponentScore = 0
     this.opponentIsWaiting = 0
+    this.harvestIteraton = 0
   }
   
   getNextAction() {
-    // TODO: write your algorithm here
     let firstComplete = this.possibleActions.find((a) => {
       return a.type == COMPLETE;
     });
     
-    if (firstComplete) {
+    let firstSeed = this.possibleActions.find((a) => {
+      return a.type == SEED;
+    });
+    
+    console.error({trees: this.trees})
+    if (this.opponentIsWaiting) return this.possibleActions[0]
+    let seedCount = this.trees.reduce((acc, next) => {
+      if (next.size == 0 && next.isMine) {
+        acc++;
+      };
+      return acc
+    }, 0);
+    
+    let fullGrownCount = this.trees.reduce((acc, next) => {
+      if (next.size == 3 && next.isMine) {
+        acc++;
+      };
+      return acc
+    }, 0);
+    
+    let firstGrow = this.possibleActions.find((a) => {
+      return a.type == GROW;
+    });
+
+    if (this.day > 15 && firstComplete && fullGrownCount > 1) {
+      this.harvestIteraton = 1;
       return firstComplete;
     }
+
+    if (this.day < 18 && firstSeed && seedCount < 1) {
+      return firstSeed;
+    }    
     
+    if (firstGrow) {
+      return firstGrow;
+    }
+
     return this.possibleActions[this.possibleActions.length-1]
   }
 }
@@ -188,6 +161,7 @@ while (true) {
   game.opponentSun = parseInt(inputs[0]);
   game.opponentScore = parseInt(inputs[1]);
   game.opponentIsWaiting = inputs[2] !== '0';
+  console.error(`inputs[2]: ${inputs[2]}`)
   game.trees = []
   const numberOfTrees = parseInt(readline());
   for (let i = 0; i < numberOfTrees; i++) {
@@ -200,7 +174,7 @@ while (true) {
       new Tree(cellIndex, size, isMine, isDormant)
     )
   }
-  console.error('mark')
+  console.error({game})
   game.possibleActions = []
   const numberOfPossibleAction = parseInt(readline());
   for (let i = 0; i < numberOfPossibleAction; i++) {
@@ -208,7 +182,6 @@ while (true) {
     game.possibleActions.push(Action.parse(possibleAction))
   }
 
-  console.error({possibleActions: game.possibleActions});
   const action = game.getNextAction()
   console.log(action.toString());
 }
