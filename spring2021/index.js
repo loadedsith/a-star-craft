@@ -1,3 +1,6 @@
+const {groupActions, getFirstComplete, getFirstSeed, types, getCellByIndex} = require('./util.js');
+const {WAIT, SEED, GROW, COMPLETE} = types;
+
 let readline_;
 let line_ = 0;
 let turn_ = 0;
@@ -16,7 +19,10 @@ const debugReadline_ = () => {
   return results;
 }
 
-readline = debugReadline_;
+if (typeof readline === 'undefined') {
+  readline = debugReadline_;
+}
+//readline = debugReadline_;
 
 class Cell {
   constructor(index, richness, neighbors) {
@@ -35,10 +41,6 @@ class Tree {
   }
 }
 
-const WAIT = 'WAIT'
-const SEED = 'SEED'
-const GROW = 'GROW'
-const COMPLETE = 'COMPLETE'
 class Action {
   constructor(type, targetCellIdx, sourceCellIdx) {
     this.type = type
@@ -70,6 +72,7 @@ class Action {
   }
 }
 
+
 class Game {
   constructor() {
     this.day = 0
@@ -86,22 +89,51 @@ class Game {
   }
   
   getNextAction() {
-    let firstComplete = this.possibleActions.find((a) => {
-      return a.type == COMPLETE;
-    });
+    let firstComplete = getFirstComplete(this.possibleActions);
     
-    let firstSeed = this.possibleActions.find((a) => {
-      return a.type == SEED;
-    });
+    let firstSeed = getFirstSeed(this.possibleActions);
     
+    let firstGrow = this.possibleActions.find((a) => {
+      return a.type == GROW;
+    });
+
+    const groupedActions = groupActions(this.possibleActions);
+    
+    let bestSeedAction = (groupedActions[SEED] || []).reduce((acc, next) => {
+      const cell = getCellByIndex(next.targetCellIdx, this.cells);
+      const accCell = getCellByIndex(acc.targetCellIdx, this.cells);
+      
+      if (cell.richness > accCell.richness) {
+        acc = next;
+      }
+      
+      return acc;
+      
+    }, firstSeed);
+    console.error({growActions: groupedActions[GROW]})
+    let bestGrowAction = (groupedActions[GROW] || []).reduce((acc, next) => {
+      const cell = getCellByIndex(next.targetCellIdx, this.cells);
+      const accCell = getCellByIndex(acc.targetCellIdx, this.cells);
+      
+      if (cell.richness > accCell.richness) {
+        acc = next;
+      }
+      
+      return acc;
+      
+    }, firstGrow);
+
     console.error({trees: this.trees})
-    if (this.opponentIsWaiting) return this.possibleActions[0]
+   
+    if (this.opponentIsWaiting) return this.possibleActions[0];
+    
     let seedCount = this.trees.reduce((acc, next) => {
       if (next.size == 0 && next.isMine) {
         acc++;
       };
       return acc
     }, 0);
+    console.error({seedCount})
     
     let fullGrownCount = this.trees.reduce((acc, next) => {
       if (next.size == 3 && next.isMine) {
@@ -109,25 +141,21 @@ class Game {
       };
       return acc
     }, 0);
-    
-    let firstGrow = this.possibleActions.find((a) => {
-      return a.type == GROW;
-    });
 
-    if (this.day > 15 && firstComplete && fullGrownCount > 1) {
+    if (this.day > 10 && firstComplete && fullGrownCount > 1) {
       this.harvestIteraton = 1;
       return firstComplete;
     }
 
     if (this.day < 18 && firstSeed && seedCount < 1) {
-      return firstSeed;
+      return bestSeedAction || firstSeed;
     }    
     
-    if (firstGrow) {
-      return firstGrow;
+    if (bestGrowAction) {
+      return bestGrowAction;
     }
-
-    return this.possibleActions[this.possibleActions.length-1]
+    return this.possibleActions[0]
+    //return this.possibleActions[this.possibleActions.length-1]
   }
 }
 
@@ -161,7 +189,7 @@ while (true) {
   game.opponentSun = parseInt(inputs[0]);
   game.opponentScore = parseInt(inputs[1]);
   game.opponentIsWaiting = inputs[2] !== '0';
-  console.error(`inputs[2]: ${inputs[2]}`)
+  
   game.trees = []
   const numberOfTrees = parseInt(readline());
   for (let i = 0; i < numberOfTrees; i++) {
@@ -174,7 +202,7 @@ while (true) {
       new Tree(cellIndex, size, isMine, isDormant)
     )
   }
-  console.error({game})
+  //console.error({game})
   game.possibleActions = []
   const numberOfPossibleAction = parseInt(readline());
   for (let i = 0; i < numberOfPossibleAction; i++) {
