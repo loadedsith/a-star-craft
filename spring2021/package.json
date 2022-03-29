@@ -14,7 +14,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "minimist": ">=1.2.3",
+    "minimist": ">=1.2.6",
     "browserify": "^16.2.3",
     "jasmine": "^3.3.1",
     "jasmine-spec-reporter": "^4.2.1",
